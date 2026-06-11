@@ -5,6 +5,18 @@ A estrutura do projeto atual é baseada em **Clean Architecture, TDD e Princípi
 
 A escala de pontuação (story points) segue a sequência de Fibonacci adaptada: **3, 5, 8, 13, 21, 35 e 54**.
 
+## Testes com Jest
+
+Este projeto utiliza Jest para testes automatizados com relatório de cobertura de código.
+
+### Instalação das dependências de teste
+```bash
+
+npm install --save-dev jest supertest mongodb-memory-server
+
+npm run test
+```
+
 ---
 
 ### Task 1: Integrar nova tecnologia - Socket.io para tempo real
