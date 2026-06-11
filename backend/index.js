@@ -13,10 +13,17 @@ app.use(cors({ credentials: true, origin: 'http://localhost:3000' }))
 app.use(express.static('public'))
 
 // Routes
-const PetRoutes = require('./routes/PetRoutes')
-const UserRoutes = require('./routes/UserRoutes')
+const PetRoutes = require('./routers/PetRouters')
+const UserRoutes = require('./routers/UserRouters')
 
 app.use('/pets', PetRoutes)
 app.use('/users', UserRoutes)
 
-app.listen(5000)
+if (process.env.NODE_ENV !== 'test') {
+    const PORT = 5000
+    app.listen(PORT, () => {
+        console.log(`Servidor rodando na porta ${PORT}'`)
+    })
+}
+
+module.exports = app
