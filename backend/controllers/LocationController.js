@@ -1,4 +1,3 @@
-
 const Location = require('../models/Location')
 const Pet = require('../models/Pet')
 const axios = require('axios')
@@ -22,17 +21,18 @@ module.exports = class LocationController {
         return res.status(422).json({ message: 'CEP é obrigatório!' })
       }
 
-      const sanitizedCep = String(cep).replace(/\D/g, '')
-      if (!/^\d{8}$/.test(sanitizedCep)) {
+      const cepLimpo = cep.replace(/\D/g, '')
+      if (!/^\d{8}$/.test(cepLimpo)) {
         return res.status(422).json({ message: 'CEP inválido!' })
       }
 
-      const pet = await Pet.findById(petId)
+      const pet = await Pet.findById(petId).exec()
       if (!pet) {
         return res.status(404).json({ message: 'Pet não encontrado!' })
       }
 
-      const response = await axios.get(`https://viacep.com.br/ws/${sanitizedCep}/json/`)
+      const url = `https://viacep.com.br/ws/${cepLimpo}/json/`
+      const response = await axios.get(url)
       
       if (response.data.erro) {
         return res.status(422).json({ message: 'CEP inválido!' })
@@ -40,7 +40,7 @@ module.exports = class LocationController {
 
       const location = new Location({
         petId,
-        cep: sanitizedCep,
+        cep: cepLimpo,
         cidade: response.data.localidade,
         estado: response.data.uf,
         bairro: response.data.bairro,
