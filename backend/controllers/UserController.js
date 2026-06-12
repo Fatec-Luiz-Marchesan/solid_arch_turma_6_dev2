@@ -9,6 +9,8 @@ const getToken = require('../helpers/get-token')
 const createUserToken = require('../helpers/create-user-token')
 const { imageUpload } = require('../helpers/image-upload')
 
+const logger = require('../config/logger')
+
 module.exports = class UserController {
   static async register(req, res) {
     const name = req.body.name
@@ -54,6 +56,7 @@ module.exports = class UserController {
     const userExists = await User.findOne({ email: email })
 
     if (userExists) {
+      logger.warn(`Tentativa de registro com email já existente: ${email}`)
       res.status(422).json({ message: 'Por favor, utilize outro e-mail!' })
       return
     }
@@ -72,9 +75,10 @@ module.exports = class UserController {
 
     try {
       const newUser = await user.save()
-
+      logger.info(`Novo usuário cadastrado com sucesso: ${email}`)
       await createUserToken(newUser, req, res)
     } catch (error) {
+      logger.error(`Erro ao cadastrar usuário ${email}: ${error.message}`)
       res.status(500).json({ message: error })
     }
   }
@@ -97,6 +101,7 @@ module.exports = class UserController {
     const user = await User.findOne({ email: email })
 
     if (!user) {
+      logger.warn(`Tentativa de login com email inexistente: ${email}`)
       return res
         .status(422)
         .json({ message: 'Não há usuário cadastrado com este e-mail!' })
@@ -106,9 +111,11 @@ module.exports = class UserController {
     const checkPassword = await bcrypt.compare(password, user.password)
 
     if (!checkPassword) {
+      logger.warn(`Tentativa de login com senha incorreta para: ${email}`)
       return res.status(422).json({ message: 'Senha inválida' })
     }
 
+    logger.info(`Usuário logado com sucesso: ${email}`)
     await createUserToken(user, req, res)
   }
 
