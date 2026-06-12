@@ -15,9 +15,12 @@ app.use(express.static('public'))
 // Routes
 const PetRoutes = require('./routers/PetRouters')
 const UserRoutes = require('./routers/UserRouters')
+const LocationRoutes = require('./routers/LocationRoutes')
 
 app.use('/pets', PetRoutes)
 app.use('/users', UserRoutes)
+app.use('/locations', LocationRoutes)
+
 
 if (process.env.NODE_ENV !== 'test') {
     const PORT = 5000
