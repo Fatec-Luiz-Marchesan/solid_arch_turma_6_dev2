@@ -159,7 +159,6 @@ class PetController {
 
       const updateData = {};
 
-      // Validação de name
       if (name !== undefined) {
         if (typeof name !== 'string' || name.trim().length === 0) {
           return res.status(422).json({ message: 'Nome inválido!' });
@@ -167,7 +166,6 @@ class PetController {
         updateData.name = name.trim();
       }
 
-      // Validação de age
       if (age !== undefined) {
         const ageNum = parseInt(age);
         if (isNaN(ageNum) || ageNum < 0) {
@@ -176,7 +174,6 @@ class PetController {
         updateData.age = ageNum;
       }
 
-      // Validação de weight
       if (weight !== undefined) {
         const weightNum = parseFloat(weight);
         if (isNaN(weightNum) || weightNum < 0) {
@@ -185,7 +182,6 @@ class PetController {
         updateData.weight = weightNum;
       }
 
-      // Validação de color
       if (color !== undefined) {
         if (typeof color !== 'string' || color.trim().length === 0) {
           return res.status(422).json({ message: 'Cor inválida!' });
@@ -193,7 +189,6 @@ class PetController {
         updateData.color = color.trim();
       }
 
-      // Validação de description
       if (description !== undefined) {
         if (typeof description !== 'string') {
           return res.status(422).json({ message: 'Descrição inválida!' });
@@ -201,47 +196,46 @@ class PetController {
         updateData.description = description.trim();
       }
 
-      // Validação de vaccinated
       if (vaccinated !== undefined) {
         const isVaccinated = vaccinated === 'true' || vaccinated === true || vaccinated === 1 || vaccinated === '1';
         updateData.vaccinated = isVaccinated;
       }
 
-      // Validação de healthStatus
       if (healthStatus !== undefined) {
         const validStatus = ['healthy', 'sick', 'treatment', 'recovering'];
         if (!validStatus.includes(healthStatus)) {
-          return res.status(422).json({ message: 'Status de saúde inválido!' });
+          return res.status(422).json({ message: 'Status de saúde inválido! Use: healthy, sick, treatment ou recovering' });
         }
         updateData.healthStatus = healthStatus;
       }
 
-      // Validação de lastVetVisit
       if (lastVetVisit !== undefined) {
-        const date = new Date(lastVetVisit);
-        if (isNaN(date.getTime())) {
-          return res.status(422).json({ message: 'Data de visita inválida!' });
+        if (lastVetVisit !== null && lastVetVisit !== '') {
+          const date = new Date(lastVetVisit);
+          if (isNaN(date.getTime())) {
+            return res.status(422).json({ message: 'Data de visita inválida!' });
+          }
+          updateData.lastVetVisit = date;
+        } else {
+          updateData.lastVetVisit = null;
         }
-        updateData.lastVetVisit = date;
       }
 
-      // Validação de available
       if (available !== undefined) {
         const isAvailable = available === 'true' || available === true || available === 1 || available === '1';
         updateData.available = isAvailable;
       }
 
-      // Validação de images
       if (images && images.length > 0) {
         if (!Array.isArray(images)) {
           return res.status(422).json({ message: 'Formato de imagens inválido!' });
         }
         updateData.images = [];
-        images.forEach(image => {
-          if (image && image.filename) {
+        for (const image of images) {
+          if (image && image.filename && typeof image.filename === 'string') {
             updateData.images.push(image.filename);
           }
-        });
+        }
       }
 
       await Pet.findByIdAndUpdate(id, updateData);
@@ -378,7 +372,7 @@ class PetController {
       const validStatus = ['healthy', 'sick', 'treatment', 'recovering'];
 
       if (!validStatus.includes(status)) {
-        return res.status(422).json({ message: 'Status de saúde inválido!' });
+        return res.status(422).json({ message: 'Status de saúde inválido! Use: healthy, sick, treatment ou recovering' });
       }
 
       const pets = await Pet.find({ healthStatus: status }).sort('-createdAt');
