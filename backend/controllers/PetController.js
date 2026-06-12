@@ -10,27 +10,29 @@ class PetController {
       const { name, age, weight, color, description, vaccinated, healthStatus, lastVetVisit } = req.body;
       const images = req.files;
 
-      if (!name) {
-        return res.status(422).json({ message: 'O nome é obrigatório!' });
+      if (!name || typeof name !== 'string') {
+        return res.status(422).json({ message: 'Nome inválido ou não informado!' });
       }
 
-      if (!age) {
-        return res.status(422).json({ message: 'A idade é obrigatória!' });
+      if (!age || isNaN(parseInt(age))) {
+        return res.status(422).json({ message: 'Idade inválida!' });
       }
 
-      if (age < 0) {
+      const ageNum = parseInt(age);
+      if (ageNum < 0) {
         return res.status(422).json({ message: 'A idade não pode ser negativa!' });
       }
 
-      if (!weight) {
-        return res.status(422).json({ message: 'O peso é obrigatório!' });
+      if (!weight || isNaN(parseFloat(weight))) {
+        return res.status(422).json({ message: 'Peso inválido!' });
       }
 
-      if (weight < 0) {
+      const weightNum = parseFloat(weight);
+      if (weightNum < 0) {
         return res.status(422).json({ message: 'O peso não pode ser negativo!' });
       }
 
-      if (!color) {
+      if (!color || typeof color !== 'string') {
         return res.status(422).json({ message: 'A cor é obrigatória!' });
       }
 
@@ -42,13 +44,13 @@ class PetController {
       const user = await getUserByToken(token);
 
       const pet = new Pet({
-        name,
-        age: parseInt(age),
-        weight: parseFloat(weight),
-        color,
-        description: description || '',
+        name: String(name).trim(),
+        age: ageNum,
+        weight: weightNum,
+        color: String(color).trim(),
+        description: description ? String(description).trim() : '',
         vaccinated: vaccinated === 'true' || vaccinated === true,
-        healthStatus: healthStatus || 'healthy',
+        healthStatus: ['healthy', 'sick', 'treatment', 'recovering'].includes(healthStatus) ? healthStatus : 'healthy',
         lastVetVisit: lastVetVisit ? new Date(lastVetVisit) : null,
         available: true,
         images: [],
@@ -157,30 +159,88 @@ class PetController {
 
       const updateData = {};
 
-      if (name) updateData.name = name;
-      if (age) {
-        if (age < 0) {
-          return res.status(422).json({ message: 'A idade não pode ser negativa!' });
+      // Validação de name
+      if (name !== undefined) {
+        if (typeof name !== 'string' || name.trim().length === 0) {
+          return res.status(422).json({ message: 'Nome inválido!' });
         }
-        updateData.age = parseInt(age);
+        updateData.name = name.trim();
       }
-      if (weight) {
-        if (weight < 0) {
-          return res.status(422).json({ message: 'O peso não pode ser negativo!' });
-        }
-        updateData.weight = parseFloat(weight);
-      }
-      if (color) updateData.color = color;
-      if (description !== undefined) updateData.description = description;
-      if (vaccinated !== undefined) updateData.vaccinated = vaccinated === 'true' || vaccinated === true;
-      if (healthStatus) updateData.healthStatus = healthStatus;
-      if (lastVetVisit) updateData.lastVetVisit = new Date(lastVetVisit);
-      if (available !== undefined) updateData.available = available === 'true' || available === true;
 
+      // Validação de age
+      if (age !== undefined) {
+        const ageNum = parseInt(age);
+        if (isNaN(ageNum) || ageNum < 0) {
+          return res.status(422).json({ message: 'Idade inválida!' });
+        }
+        updateData.age = ageNum;
+      }
+
+      // Validação de weight
+      if (weight !== undefined) {
+        const weightNum = parseFloat(weight);
+        if (isNaN(weightNum) || weightNum < 0) {
+          return res.status(422).json({ message: 'Peso inválido!' });
+        }
+        updateData.weight = weightNum;
+      }
+
+      // Validação de color
+      if (color !== undefined) {
+        if (typeof color !== 'string' || color.trim().length === 0) {
+          return res.status(422).json({ message: 'Cor inválida!' });
+        }
+        updateData.color = color.trim();
+      }
+
+      // Validação de description
+      if (description !== undefined) {
+        if (typeof description !== 'string') {
+          return res.status(422).json({ message: 'Descrição inválida!' });
+        }
+        updateData.description = description.trim();
+      }
+
+      // Validação de vaccinated
+      if (vaccinated !== undefined) {
+        const isVaccinated = vaccinated === 'true' || vaccinated === true || vaccinated === 1 || vaccinated === '1';
+        updateData.vaccinated = isVaccinated;
+      }
+
+      // Validação de healthStatus
+      if (healthStatus !== undefined) {
+        const validStatus = ['healthy', 'sick', 'treatment', 'recovering'];
+        if (!validStatus.includes(healthStatus)) {
+          return res.status(422).json({ message: 'Status de saúde inválido!' });
+        }
+        updateData.healthStatus = healthStatus;
+      }
+
+      // Validação de lastVetVisit
+      if (lastVetVisit !== undefined) {
+        const date = new Date(lastVetVisit);
+        if (isNaN(date.getTime())) {
+          return res.status(422).json({ message: 'Data de visita inválida!' });
+        }
+        updateData.lastVetVisit = date;
+      }
+
+      // Validação de available
+      if (available !== undefined) {
+        const isAvailable = available === 'true' || available === true || available === 1 || available === '1';
+        updateData.available = isAvailable;
+      }
+
+      // Validação de images
       if (images && images.length > 0) {
+        if (!Array.isArray(images)) {
+          return res.status(422).json({ message: 'Formato de imagens inválido!' });
+        }
         updateData.images = [];
         images.forEach(image => {
-          updateData.images.push(image.filename);
+          if (image && image.filename) {
+            updateData.images.push(image.filename);
+          }
         });
       }
 
