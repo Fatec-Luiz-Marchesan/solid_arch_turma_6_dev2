@@ -1,26 +1,13 @@
-const router = require('express').Router()
-const PetController = require('../controllers/PetController')
-const verifyToken = require('../helpers/check-token')
-const { imageUpload } = require('../helpers/image-upload')
+const { strictLimiter, standardLimiter } = require('../middlewares/rateLimiter');
 
-router.post(
-    '/create',
-    verifyToken,
-    imageUpload.array('images'),
-    PetController.create,
-)
-router.get('/', PetController.getAll)
-router.get('/mypets', PetController.getAllUserPets)
-router.get('/myadoptions', verifyToken, PetController.getAllUserAdoptions)
-router.get('/:id', PetController.getPetById)
-router.delete('/:id', verifyToken, PetController.removePetById)
-router.patch(
-    '/:id',
-    verifyToken,
-    imageUpload.array('images'),
-    PetController.updatePet,
-)
-router.patch('/schedule/:id', verifyToken, PetController.schedule)
-router.patch('/conclude/:id', verifyToken, PetController.concludeAdoption)
-
-module.exports = router
+router.post('/create', checkToken, strictLimiter, PetController.create);
+router.get('/', standardLimiter, PetController.getAll);
+router.get('/mypets', checkToken, standardLimiter, PetController.getAllUserPets);
+router.get('/myadoptions', checkToken, standardLimiter, PetController.getAllUserAdoptions);
+router.get('/:id', standardLimiter, PetController.getPetById);
+router.put('/:id', checkToken, strictLimiter, PetController.updatePet);
+router.delete('/:id', checkToken, strictLimiter, PetController.deletePet);
+router.patch('/schedule/:id', checkToken, strictLimiter, PetController.schedule);
+router.patch('/conclude/:id', checkToken, strictLimiter, PetController.concludeAdoption);
+router.get('/vaccinated/list', standardLimiter, PetController.getVaccinatedPets);
+router.get('/health/:status', standardLimiter, PetController.getPetsByHealthStatus);

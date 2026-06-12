@@ -1,333 +1,409 @@
-const Pet = require('../models/Pet')
+const Pet = require('../models/Pet');
+const getUserByToken = require('../helpers/get-user-by-token');
+const getToken = require('../helpers/get-token');
+const ObjectId = require('mongoose').Types.ObjectId;
+const logger = require('../config/logger');
 
-// helpers
-const getUserByToken = require('../helpers/get-user-by-token')
-const getToken = require('../helpers/get-token')
-const ObjectId = require('mongoose').Types.ObjectId
-
-const logger = require('../config/logger')
-
-module.exports = class PetController {
-  // create a pet
+class PetController {
   static async create(req, res) {
-    const name = req.body.name
-    const age = req.body.age
-    const description = req.body.description
-    const weight = req.body.weight
-    const color = req.body.color
-    const images = req.files
-    const available = true
-
-    // console.log(req.body)
-    console.log(images)
-    // return
-
-    // validations
-    if (!name) {
-      res.status(422).json({ message: 'O nome é obrigatório!' })
-      return
-    }
-
-    if (!age) {
-      res.status(422).json({ message: 'A idade é obrigatória!' })
-      return
-    }
-
-    if (!weight) {
-      res.status(422).json({ message: 'O peso é obrigatório!' })
-      return
-    }
-
-    if (!color) {
-      res.status(422).json({ message: 'A cor é obrigatória!' })
-      return
-    }
-
-    if (!images) {
-      res.status(422).json({ message: 'A imagem é obrigatória!' })
-      return
-    }
-
-    // get user
-    const token = getToken(req)
-    const user = await getUserByToken(token)
-
-    // create pet
-    const pet = new Pet({
-      name: name,
-      age: age,
-      description: description,
-      weight: weight,
-      color: color,
-      available: available,
-      images: [],
-      user: {
-        _id: user._id,
-        name: user.name,
-        image: user.image,
-        phone: user.phone,
-      },
-    })
-
-    images.map((image) => {
-      pet.images.push(image.filename)
-    })
-
     try {
-      const newPet = await pet.save()
+      const { name, age, weight, color, description, vaccinated, healthStatus, lastVetVisit } = req.body;
+      const images = req.files;
+
+      if (!name || typeof name !== 'string') {
+        return res.status(422).json({ message: 'Nome inválido ou não informado!' });
+      }
+
+      if (!age || isNaN(parseInt(age))) {
+        return res.status(422).json({ message: 'Idade inválida!' });
+      }
+
+      const ageNum = parseInt(age);
+      if (ageNum < 0) {
+        return res.status(422).json({ message: 'A idade não pode ser negativa!' });
+      }
+
+      if (!weight || isNaN(parseFloat(weight))) {
+        return res.status(422).json({ message: 'Peso inválido!' });
+      }
+
+      const weightNum = parseFloat(weight);
+      if (weightNum < 0) {
+        return res.status(422).json({ message: 'O peso não pode ser negativo!' });
+      }
+
+      if (!color || typeof color !== 'string') {
+        return res.status(422).json({ message: 'A cor é obrigatória!' });
+      }
+
+      if (!images || images.length === 0) {
+        return res.status(422).json({ message: 'A imagem é obrigatória!' });
+      }
+
+      const token = getToken(req);
+      const user = await getUserByToken(token);
+
+      const pet = new Pet({
+        name: String(name).trim(),
+        age: ageNum,
+        weight: weightNum,
+        color: String(color).trim(),
+        description: description ? String(description).trim() : '',
+        vaccinated: vaccinated === 'true' || vaccinated === true,
+        healthStatus: ['healthy', 'sick', 'treatment', 'recovering'].includes(healthStatus) ? healthStatus : 'healthy',
+        lastVetVisit: lastVetVisit ? new Date(lastVetVisit) : null,
+        available: true,
+        images: [],
+        user: {
+          _id: user._id,
+          name: user.name,
+          image: user.image,
+          phone: user.phone
+        }
+      });
+
+      images.forEach(image => {
+        pet.images.push(image.filename);
+      });
+
+      const newPet = await pet.save();
+      logger.info(`Pet criado: ${newPet.name} por ${user.name}`);
 
       res.status(201).json({
         message: 'Pet cadastrado com sucesso!',
-        newPet: newPet,
-      })
+        pet: newPet
+      });
     } catch (error) {
-      res.status(500).json({ message: error })
+      logger.error(`Erro ao criar pet: ${error.message}`);
+      res.status(500).json({ message: error.message });
     }
   }
 
-  // get all registered pets
   static async getAll(req, res) {
-    const pets = await Pet.find().sort('-createdAt')
-
-    res.status(200).json({
-      pets: pets,
-    })
+    try {
+      const pets = await Pet.find().sort('-createdAt');
+      res.status(200).json({ pets });
+    } catch (error) {
+      logger.error(`Erro ao buscar pets: ${error.message}`);
+      res.status(500).json({ message: error.message });
+    }
   }
 
-  // get all user pets
   static async getAllUserPets(req, res) {
-    // get user
-    const token = getToken(req)
-    const user = await getUserByToken(token)
-
-    const pets = await Pet.find({ 'user._id': user._id })
-
-    res.status(200).json({
-      pets,
-    })
+    try {
+      const token = getToken(req);
+      const user = await getUserByToken(token);
+      const pets = await Pet.find({ 'user._id': user._id });
+      res.status(200).json({ pets });
+    } catch (error) {
+      logger.error(`Erro ao buscar pets do usuário: ${error.message}`);
+      res.status(500).json({ message: error.message });
+    }
   }
 
-  // get all user adoptions
   static async getAllUserAdoptions(req, res) {
-    // get user
-    const token = getToken(req)
-    const user = await getUserByToken(token)
-
-    const pets = await Pet.find({ 'adopter._id': user._id })
-
-    res.status(200).json({
-      pets,
-    })
+    try {
+      const token = getToken(req);
+      const user = await getUserByToken(token);
+      const pets = await Pet.find({ 'adopter._id': user._id });
+      res.status(200).json({ pets });
+    } catch (error) {
+      logger.error(`Erro ao buscar adoções: ${error.message}`);
+      res.status(500).json({ message: error.message });
+    }
   }
 
-  // get a specific pet
   static async getPetById(req, res) {
-    const id = req.params.id
+    try {
+      const { id } = req.params;
 
-    // check if id is valid
-    if (!ObjectId.isValid(id)) {
-      res.status(422).json({ message: 'ID inválido!' })
-      return
-    }
-
-    // check if pet exists
-    const pet = await Pet.findOne({ _id: id })
-
-    if (!pet) {
-      res.status(404).json({ message: 'Pet não encontrado!' })
-      return
-    }
-
-    res.status(200).json({
-      pet: pet,
-    })
-  }
-
-  // remove a pet
-  static async removePetById(req, res) {
-    const id = req.params.id
-
-    // check if id is valid
-    if (!ObjectId.isValid(id)) {
-      res.status(422).json({ message: 'ID inválido!' })
-      return
-    }
-
-    // check if pet exists
-    const pet = await Pet.findOne({ _id: id })
-
-    if (!pet) {
-      res.status(404).json({ message: 'Pet não encontrado!' })
-      return
-    }
-
-    // check if user registered this pet
-    const token = getToken(req)
-    const user = await getUserByToken(token)
-
-    if (pet.user._id.toString() != user._id.toString()) {
-      res.status(404).json({
-        message:
-          'Houve um problema em processar sua solicitação, tente novamente mais tarde!',
-      })
-      return
-    }
-
-    await Pet.findByIdAndRemove(id)
-
-    res.status(200).json({ message: 'Pet removido com sucesso!' })
-  }
-
-  // update a pet
-  static async updatePet(req, res) {
-    const id = req.params.id
-    const name = req.body.name
-    const age = req.body.age
-    const description = req.body.description
-    const weight = req.body.weight
-    const color = req.body.color
-    const images = req.files
-    const available = req.body.available
-
-    const updateData = {}
-
-    // check if pet exists
-    const pet = await Pet.findOne({ _id: id })
-
-    if (!pet) {
-      res.status(404).json({ message: 'Pet não encontrado!' })
-      return
-    }
-
-    // check if user registered this pet
-    const token = getToken(req)
-    const user = await getUserByToken(token)
-
-    if (pet.user._id.toString() != user._id.toString()) {
-      res.status(404).json({
-        message:
-          'Houve um problema em processar sua solicitação, tente novamente mais tarde!',
-      })
-      return
-    }
-
-    // validations
-    if (!name) {
-      res.status(422).json({ message: 'O nome é obrigatório!' })
-      return
-    } else {
-      updateData.name = name
-    }
-
-    if (!age) {
-      res.status(422).json({ message: 'A idade é obrigatória!' })
-      return
-    } else {
-      updateData.age = age
-    }
-
-    if (!weight) {
-      res.status(422).json({ message: 'O peso é obrigatório!' })
-      return
-    } else {
-      updateData.weight = weight
-    }
-
-    if (!color) {
-      res.status(422).json({ message: 'A cor é obrigatória!' })
-      return
-    } else {
-      updateData.color = color
-    }
-
-    if (!images) {
-      res.status(422).json({ message: 'A imagem é obrigatória!' })
-      return
-    } else {
-      updateData.images = []
-      images.map((image) => {
-        updateData.images.push(image.filename)
-      })
-    }
-
-    if (!available) {
-      res.status(422).json({ message: 'O status é obrigatório!' })
-      return
-    } else {
-      updateData.available = available
-    }
-
-    updateData.description = description
-
-    await Pet.findByIdAndUpdate(id, updateData)
-
-    res.status(200).json({ pet: pet, message: 'Pet atualizado com sucesso!' })
-  }
-
-  // schedule a visit
-  static async schedule(req, res) {
-    const id = req.params.id
-
-    // check if pet exists
-    const pet = await Pet.findOne({ _id: id })
-
-    // check if user owns this pet
-    const token = getToken(req)
-    const user = await getUserByToken(token)
-
-    console.log(pet)
-
-    if (pet.user._id.equals(user._id)) {
-      res.status(422).json({
-        message: 'Você não pode agendar uma visita com seu próprio Pet!',
-      })
-      return
-    }
-
-    // check if user has already adopted this pet
-    if (pet.adopter) {
-      if (pet.adopter._id.equals(user._id)) {
-        res.status(422).json({
-          message: 'Você já agendou uma visita para este Pet!',
-        })
-        return
+      if (!ObjectId.isValid(id)) {
+        return res.status(422).json({ message: 'ID inválido!' });
       }
+
+      const pet = await Pet.findById(id);
+
+      if (!pet) {
+        return res.status(404).json({ message: 'Pet não encontrado!' });
+      }
+
+      res.status(200).json({ pet });
+    } catch (error) {
+      logger.error(`Erro ao buscar pet: ${error.message}`);
+      res.status(500).json({ message: error.message });
     }
-
-    // add user to pet
-    pet.adopter = {
-      _id: user._id,
-      name: user.name,
-      image: user.image,
-    }
-
-    console.log(pet)
-
-    await Pet.findByIdAndUpdate(pet._id, pet)
-
-    logger.info(`Visita agendada para o pet ${id} pelo usuário ${user._id}`)
-
-    res.status(200).json({
-      message: `A visita foi agendada com sucesso, entre em contato com ${pet.user.name} no telefone: ${pet.user.phone}`,
-    })
   }
 
-  // conclude a pet adoption
+  static async updatePet(req, res) {
+    try {
+      const { id } = req.params;
+      const { name, age, weight, color, description, vaccinated, healthStatus, lastVetVisit, available } = req.body;
+      const images = req.files;
+
+      if (!ObjectId.isValid(id)) {
+        return res.status(422).json({ message: 'ID inválido!' });
+      }
+
+      const pet = await Pet.findById(id);
+
+      if (!pet) {
+        return res.status(404).json({ message: 'Pet não encontrado!' });
+      }
+
+      const token = getToken(req);
+      const user = await getUserByToken(token);
+
+      if (pet.user._id.toString() !== user._id.toString()) {
+        return res.status(403).json({ message: 'Você não tem permissão para editar este pet!' });
+      }
+
+      // Criar objeto de update seguro - apenas campos permitidos
+      const allowedFields = ['name', 'age', 'weight', 'color', 'description', 'vaccinated', 'healthStatus', 'lastVetVisit', 'available', 'images'];
+      const updateData = {};
+
+      // Validar e sanitizar name
+      if (name !== undefined) {
+        if (typeof name !== 'string' || name.trim().length === 0) {
+          return res.status(422).json({ message: 'Nome inválido!' });
+        }
+        if (!name.match(/^[a-zA-ZÀ-ÿ\s]{1,100}$/)) {
+          return res.status(422).json({ message: 'Nome contém caracteres inválidos!' });
+        }
+        updateData.name = name.trim();
+      }
+
+      // Validar e sanitizar age
+      if (age !== undefined) {
+        const ageNum = parseInt(age);
+        if (isNaN(ageNum) || ageNum < 0 || ageNum > 50) {
+          return res.status(422).json({ message: 'Idade inválida! (0-50 anos)' });
+        }
+        updateData.age = ageNum;
+      }
+
+      // Validar e sanitizar weight
+      if (weight !== undefined) {
+        const weightNum = parseFloat(weight);
+        if (isNaN(weightNum) || weightNum < 0 || weightNum > 200) {
+          return res.status(422).json({ message: 'Peso inválido! (0-200 kg)' });
+        }
+        updateData.weight = weightNum;
+      }
+
+      // Validar e sanitizar color
+      if (color !== undefined) {
+        if (typeof color !== 'string' || color.trim().length === 0) {
+          return res.status(422).json({ message: 'Cor inválida!' });
+        }
+        if (!color.match(/^[a-zA-ZÀ-ÿ\s]{1,50}$/)) {
+          return res.status(422).json({ message: 'Cor contém caracteres inválidos!' });
+        }
+        updateData.color = color.trim();
+      }
+
+      // Validar description
+      if (description !== undefined) {
+        if (typeof description !== 'string') {
+          return res.status(422).json({ message: 'Descrição inválida!' });
+        }
+        updateData.description = description.trim().substring(0, 500);
+      }
+
+      // Validar vaccinated
+      if (vaccinated !== undefined) {
+        const isVaccinated = vaccinated === 'true' || vaccinated === true || vaccinated === 1 || vaccinated === '1';
+        updateData.vaccinated = isVaccinated;
+      }
+
+      // Validar healthStatus
+      if (healthStatus !== undefined) {
+        const validStatus = ['healthy', 'sick', 'treatment', 'recovering'];
+        if (!validStatus.includes(healthStatus)) {
+          return res.status(422).json({ message: 'Status de saúde inválido!' });
+        }
+        updateData.healthStatus = healthStatus;
+      }
+
+      // Validar lastVetVisit
+      if (lastVetVisit !== undefined) {
+        if (lastVetVisit !== null && lastVetVisit !== '') {
+          const date = new Date(lastVetVisit);
+          if (isNaN(date.getTime())) {
+            return res.status(422).json({ message: 'Data de visita inválida!' });
+          }
+          updateData.lastVetVisit = date;
+        } else {
+          updateData.lastVetVisit = null;
+        }
+      }
+
+      // Validar available
+      if (available !== undefined) {
+        const isAvailable = available === 'true' || available === true || available === 1 || available === '1';
+        updateData.available = isAvailable;
+      }
+
+      // Validar images
+      if (images && images.length > 0) {
+        if (!Array.isArray(images)) {
+          return res.status(422).json({ message: 'Formato de imagens inválido!' });
+        }
+        updateData.images = [];
+        for (const image of images) {
+          if (image && image.filename && typeof image.filename === 'string') {
+            // Validar nome do arquivo
+            if (image.filename.match(/^[a-zA-Z0-9-_\.]{1,255}$/)) {
+              updateData.images.push(image.filename);
+            }
+          }
+        }
+      }
+
+      // Usar $set para evitar injeção de operadores MongoDB
+      await Pet.findByIdAndUpdate(id, { $set: updateData });
+      const updatedPet = await Pet.findById(id);
+
+      logger.info(`Pet atualizado: ${updatedPet.name}`);
+
+      res.status(200).json({
+        message: 'Pet atualizado com sucesso!',
+        pet: updatedPet
+      });
+    } catch (error) {
+      logger.error(`Erro ao atualizar pet: ${error.message}`);
+      res.status(500).json({ message: error.message });
+    }
+  }
+
+  static async deletePet(req, res) {
+    try {
+      const { id } = req.params;
+
+      if (!ObjectId.isValid(id)) {
+        return res.status(422).json({ message: 'ID inválido!' });
+      }
+
+      const pet = await Pet.findById(id);
+
+      if (!pet) {
+        return res.status(404).json({ message: 'Pet não encontrado!' });
+      }
+
+      const token = getToken(req);
+      const user = await getUserByToken(token);
+
+      if (pet.user._id.toString() !== user._id.toString()) {
+        return res.status(403).json({ message: 'Você não tem permissão para deletar este pet!' });
+      }
+
+      await Pet.findByIdAndDelete(id);
+      logger.info(`Pet deletado: ${pet.name}`);
+
+      res.status(200).json({ message: 'Pet removido com sucesso!' });
+    } catch (error) {
+      logger.error(`Erro ao deletar pet: ${error.message}`);
+      res.status(500).json({ message: error.message });
+    }
+  }
+
+  static async schedule(req, res) {
+    try {
+      const { id } = req.params;
+
+      if (!ObjectId.isValid(id)) {
+        return res.status(422).json({ message: 'ID inválido!' });
+      }
+
+      const pet = await Pet.findById(id);
+
+      if (!pet) {
+        return res.status(404).json({ message: 'Pet não encontrado!' });
+      }
+
+      const token = getToken(req);
+      const user = await getUserByToken(token);
+
+      if (pet.user._id.toString() === user._id.toString()) {
+        return res.status(422).json({ message: 'Você não pode agendar uma visita com seu próprio pet!' });
+      }
+
+      if (pet.adopter && pet.adopter._id.toString() === user._id.toString()) {
+        return res.status(422).json({ message: 'Você já agendou uma visita para este pet!' });
+      }
+
+      pet.adopter = {
+        _id: user._id,
+        name: user.name,
+        image: user.image
+      };
+
+      await pet.save();
+      logger.info(`Visita agendada para o pet ${pet.name} pelo usuário ${user.name}`);
+
+      res.status(200).json({
+        message: `Visita agendada! Entre em contato com ${pet.user.name} no telefone: ${pet.user.phone}`
+      });
+    } catch (error) {
+      logger.error(`Erro ao agendar visita: ${error.message}`);
+      res.status(500).json({ message: error.message });
+    }
+  }
+
   static async concludeAdoption(req, res) {
-    const id = req.params.id
+    try {
+      const { id } = req.params;
 
-    // check if pet exists
-    const pet = await Pet.findOne({ _id: id })
+      if (!ObjectId.isValid(id)) {
+        return res.status(422).json({ message: 'ID inválido!' });
+      }
 
-    pet.available = false
+      const pet = await Pet.findById(id);
 
-    await Pet.findByIdAndUpdate(pet._id, pet)
+      if (!pet) {
+        return res.status(404).json({ message: 'Pet não encontrado!' });
+      }
 
-    logger.info(`Adoção concluída para o pet ${id}`)
+      pet.available = false;
+      await pet.save();
 
-    res.status(200).json({
-      pet: pet,
-      message: `Parabéns! O ciclo de adoção foi finalizado com sucesso!`,
-    })
+      logger.info(`Adoção concluída para o pet ${pet.name}`);
+
+      res.status(200).json({
+        message: 'Adoção finalizada com sucesso!',
+        pet
+      });
+    } catch (error) {
+      logger.error(`Erro ao concluir adoção: ${error.message}`);
+      res.status(500).json({ message: error.message });
+    }
+  }
+
+  static async getVaccinatedPets(req, res) {
+    try {
+      const pets = await Pet.find({ vaccinated: true }).sort('-createdAt');
+      res.status(200).json({ pets, count: pets.length });
+    } catch (error) {
+      logger.error(`Erro ao buscar pets vacinados: ${error.message}`);
+      res.status(500).json({ message: error.message });
+    }
+  }
+
+  static async getPetsByHealthStatus(req, res) {
+    try {
+      const { status } = req.params;
+      const validStatus = ['healthy', 'sick', 'treatment', 'recovering'];
+
+      if (!validStatus.includes(status)) {
+        return res.status(422).json({ message: 'Status de saúde inválido!' });
+      }
+
+      const pets = await Pet.find({ healthStatus: status }).sort('-createdAt');
+      res.status(200).json({ pets, count: pets.length, status });
+    } catch (error) {
+      logger.error(`Erro ao buscar pets por status: ${error.message}`);
+      res.status(500).json({ message: error.message });
+    }
   }
 }
+
+module.exports = PetController;
