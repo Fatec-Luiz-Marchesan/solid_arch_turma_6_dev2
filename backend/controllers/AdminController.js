@@ -1,7 +1,6 @@
 const Admin = require('../models/Admin');
 const jwt = require('jsonwebtoken');
 const logger = require('../config/logger');
-const validator = require('validator');
 
 class AdminController {
   
