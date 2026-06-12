@@ -2,12 +2,13 @@ const Admin = require('../models/Admin');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const logger = require('../config/logger');
+const validator = require('validator');
 
 class AdminController {
   
   async createAdmin(req, res) {
     try {
-      const { name, email, password, role, permissions } = req.body;
+      let { name, email, password, role, permissions } = req.body;
       
       if (!name || !email || !password) {
         return res.status(422).json({ 
@@ -15,8 +16,10 @@ class AdminController {
         });
       }
       
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(email)) {
+      name = String(name).trim();
+      email = String(email).trim().toLowerCase();
+      
+      if (!validator.isEmail(email)) {
         return res.status(422).json({ 
           message: 'Email inválido' 
         });
@@ -67,13 +70,15 @@ class AdminController {
   
   async loginAdmin(req, res) {
     try {
-      const { email, password } = req.body;
+      let { email, password } = req.body;
       
       if (!email || !password) {
         return res.status(422).json({ 
           message: 'Email e senha são obrigatórios' 
         });
       }
+      
+      email = String(email).trim().toLowerCase();
       
       const admin = await Admin.findOne({ email });
       if (!admin) {
@@ -126,9 +131,12 @@ class AdminController {
         query.isActive = active === 'true';
       }
       
+      const pageNum = parseInt(page, 10);
+      const limitNum = parseInt(limit, 10);
+      
       const admins = await Admin.find(query)
-        .limit(limit * 1)
-        .skip((page - 1) * limit)
+        .limit(limitNum)
+        .skip((pageNum - 1) * limitNum)
         .sort({ createdAt: -1 });
       
       const total = await Admin.countDocuments(query);
@@ -136,8 +144,8 @@ class AdminController {
       res.status(200).json({
         admins: admins.map(admin => admin.toJSON()),
         total,
-        page: parseInt(page),
-        pages: Math.ceil(total / limit)
+        page: pageNum,
+        pages: Math.ceil(total / limitNum)
       });
     } catch (error) {
       logger.error(`Erro ao listar admins: ${error.message}`);
@@ -149,7 +157,7 @@ class AdminController {
     try {
       const { id } = req.params;
       
-      if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+      if (!id || !id.match(/^[0-9a-fA-F]{24}$/)) {
         return res.status(422).json({ message: 'ID inválido' });
       }
       
@@ -170,7 +178,7 @@ class AdminController {
       const { id } = req.params;
       const { name, role, permissions, isActive } = req.body;
       
-      if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+      if (!id || !id.match(/^[0-9a-fA-F]{24}$/)) {
         return res.status(422).json({ message: 'ID inválido' });
       }
       
@@ -179,15 +187,20 @@ class AdminController {
         return res.status(404).json({ message: 'Admin não encontrado' });
       }
       
-      if (name) admin.name = name;
+      if (name) admin.name = String(name).trim();
       if (role && ['admin', 'moderator'].includes(role)) {
         admin.role = role;
       }
       if (permissions) {
-        admin.permissions = { ...admin.permissions, ...permissions };
+        const allowedPermissions = ['manageUsers', 'managePets', 'manageLocations', 'viewReports', 'manageAdmins'];
+        for (const [key, value] of Object.entries(permissions)) {
+          if (allowedPermissions.includes(key) && typeof value === 'boolean') {
+            admin.permissions[key] = value;
+          }
+        }
       }
       if (isActive !== undefined) {
-        admin.isActive = isActive;
+        admin.isActive = isActive === true || isActive === 'true';
       }
       
       admin.updatedAt = new Date();
@@ -209,6 +222,10 @@ class AdminController {
     try {
       const { id } = req.params;
       const { currentPassword, newPassword } = req.body;
+      
+      if (!id || !id.match(/^[0-9a-fA-F]{24}$/)) {
+        return res.status(422).json({ message: 'ID inválido' });
+      }
       
       if (!currentPassword || !newPassword) {
         return res.status(422).json({ 
@@ -250,7 +267,7 @@ class AdminController {
     try {
       const { id } = req.params;
       
-      if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+      if (!id || !id.match(/^[0-9a-fA-F]{24}$/)) {
         return res.status(422).json({ message: 'ID inválido' });
       }
       
@@ -272,6 +289,7 @@ class AdminController {
     try {
       const totalAdmins = await Admin.countDocuments();
       const activeAdmins = await Admin.countDocuments({ isActive: true });
+      const inactiveAdmins = totalAdmins - activeAdmins;
       const recentAdmins = await Admin.find()
         .sort({ createdAt: -1 })
         .limit(5);
@@ -279,7 +297,7 @@ class AdminController {
       res.status(200).json({
         totalAdmins,
         activeAdmins,
-        inactiveAdmins: totalAdmins - activeAdmins,
+        inactiveAdmins,
         recentAdmins: recentAdmins.map(admin => admin.toJSON()),
         timestamp: new Date().toISOString()
       });
@@ -292,6 +310,10 @@ class AdminController {
   async toggleAdminStatus(req, res) {
     try {
       const { id } = req.params;
+      
+      if (!id || !id.match(/^[0-9a-fA-F]{24}$/)) {
+        return res.status(422).json({ message: 'ID inválido' });
+      }
       
       const admin = await Admin.findById(id);
       if (!admin) {
@@ -318,6 +340,10 @@ class AdminController {
     try {
       const { id } = req.params;
       const { permissions } = req.body;
+      
+      if (!id || !id.match(/^[0-9a-fA-F]{24}$/)) {
+        return res.status(422).json({ message: 'ID inválido' });
+      }
       
       if (!permissions) {
         return res.status(422).json({ message: 'Permissões são obrigatórias' });
