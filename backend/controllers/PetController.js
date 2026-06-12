@@ -5,6 +5,8 @@ const getUserByToken = require('../helpers/get-user-by-token')
 const getToken = require('../helpers/get-token')
 const ObjectId = require('mongoose').Types.ObjectId
 
+const logger = require('../config/logger')
+
 module.exports = class PetController {
   // create a pet
   static async create(req, res) {
@@ -303,6 +305,8 @@ module.exports = class PetController {
 
     await Pet.findByIdAndUpdate(pet._id, pet)
 
+    logger.info(`Visita agendada para o pet ${id} pelo usuário ${user._id}`)
+
     res.status(200).json({
       message: `A visita foi agendada com sucesso, entre em contato com ${pet.user.name} no telefone: ${pet.user.phone}`,
     })
@@ -318,6 +322,8 @@ module.exports = class PetController {
     pet.available = false
 
     await Pet.findByIdAndUpdate(pet._id, pet)
+
+    logger.info(`Adoção concluída para o pet ${id}`)
 
     res.status(200).json({
       pet: pet,
