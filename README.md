@@ -17,6 +17,20 @@ npm install --save-dev jest supertest mongodb-memory-server
 npm run test
 ```
 
+## Location
+
+**Endpoints:**
+- POST `/locations/create` (auth)
+- GET `/locations/pet/:petId`
+- GET `/locations/:id`
+- DELETE `/locations/:id` (auth)
+
+**Exemplo:** `{ "petId": "123", "cep": "01001000" }`
+
+**Integração:** ViaCEP
+
+**Testes:** `npm run test -- tests/unit/location.test.js`
+
 ---
 
 ### Task 1: Integrar nova tecnologia - Socket.io para tempo real
