@@ -5,10 +5,14 @@ describe('Vaccine Model', () => {
     const vaccine = new Vaccine({
       petId: '507f1f77bcf86cd799439011',
       name: 'Raiva',
+      manufacturer: 'Zoetis',
+      batchNumber: 'LOT123',
       date: new Date()
     });
 
     expect(vaccine.name).toBe('Raiva');
+    expect(vaccine.manufacturer).toBe('Zoetis');
+    expect(vaccine.batchNumber).toBe('LOT123');
     expect(vaccine.petId).toBeDefined();
     expect(vaccine.date).toBeDefined();
   });
@@ -17,6 +21,8 @@ describe('Vaccine Model', () => {
     const vaccine = new Vaccine({
       petId: '507f1f77bcf86cd799439011',
       name: 'Raiva',
+      manufacturer: 'Zoetis',
+      batchNumber: 'LOT123',
       date: new Date()
     });
 
@@ -27,6 +33,8 @@ describe('Vaccine Model', () => {
     const vaccine = new Vaccine({
       petId: '507f1f77bcf86cd799439011',
       name: 'Raiva',
+      manufacturer: 'Zoetis',
+      batchNumber: 'LOT123',
       date: new Date(),
       nextDueDate: new Date('2020-01-01')
     });
@@ -39,6 +47,8 @@ describe('Vaccine Model', () => {
 
     expect(schema.petId).toBeDefined();
     expect(schema.name).toBeDefined();
+    expect(schema.manufacturer).toBeDefined();
+    expect(schema.batchNumber).toBeDefined();
     expect(schema.date).toBeDefined();
   });
 
@@ -46,5 +56,17 @@ describe('Vaccine Model', () => {
     expect(
       Vaccine.schema.paths.petId.options.ref
     ).toBe('Pet');
+  });
+
+  it('deve possuir manufacturer como obrigatório', () => {
+    expect(
+      Vaccine.schema.paths.manufacturer.options.required
+    ).toBe(true);
+  });
+
+  it('deve possuir batchNumber como obrigatório', () => {
+    expect(
+      Vaccine.schema.paths.batchNumber.options.required
+    ).toBe(true);
   });
 });

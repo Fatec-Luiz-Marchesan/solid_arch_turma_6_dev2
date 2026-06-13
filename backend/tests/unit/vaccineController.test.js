@@ -71,6 +71,8 @@ describe('VaccineController', () => {
 
       req.body = {
         name: 'Raiva',
+        manufacturer: 'Zoetis',
+        batchNumber: 'LOT123',
         date: '2025-01-01'
       };
 
@@ -134,6 +136,30 @@ describe('VaccineController', () => {
 
       req.body = {
         name: ''
+      };
+
+      await VaccineController.createVaccine(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(422);
+    });
+
+    it('deve retornar 422 quando fabricante e lote não forem enviados', async () => {
+      getUserByToken.mockResolvedValue({
+        _id: 'userId',
+        role: 'user'
+      });
+
+      Pet.findById.mockResolvedValue({
+        user: {
+          toString: () => 'userId'
+        }
+      });
+
+      req.params.petId = 'petId';
+
+      req.body = {
+        name: 'Raiva',
+        date: '2025-01-01'
       };
 
       await VaccineController.createVaccine(req, res);
@@ -231,12 +257,16 @@ describe('VaccineController', () => {
       req.params.id = 'vacinaId';
 
       req.body = {
-        name: 'Nova Vacina'
+        name: 'Nova Vacina',
+        manufacturer: 'Pfizer',
+        batchNumber: 'NOVOLOTE'
       };
 
       await VaccineController.updateVaccine(req, res);
 
       expect(vaccine.name).toBe('Nova Vacina');
+      expect(vaccine.manufacturer).toBe('Pfizer');
+      expect(vaccine.batchNumber).toBe('NOVOLOTE');
       expect(vaccine.save).toHaveBeenCalled();
       expect(res.status).toHaveBeenCalledWith(200);
     });
