@@ -43,13 +43,13 @@ describe('VaccineController', () => {
         _id: '123',
         name: 'Raiva',
         manufacturer: 'Zoetis',
-        doses: 1,
+        batchNumber: 'LOT123',
       }
 
       req.body = {
         name: 'Raiva',
         manufacturer: 'Zoetis',
-        doses: 1,
+        batchNumber: 'LOT123',
       }
 
       CreateVaccineUseCase.mockImplementation(() => ({
@@ -88,6 +88,8 @@ describe('VaccineController', () => {
       const updatedVaccine = {
         _id: '1',
         name: 'Raiva Atualizada',
+        manufacturer: 'Zoetis',
+        batchNumber: 'LOT999',
       }
 
       req.params.id = '1'
