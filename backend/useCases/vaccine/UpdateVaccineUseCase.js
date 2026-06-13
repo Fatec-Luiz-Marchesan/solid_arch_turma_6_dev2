@@ -4,11 +4,10 @@ class UpdateVaccineUseCase {
   async execute(id, data) {
     const allowedFields = [
       'name',
-      'description',
-      'laboratory',
-      'doses',
-      'interval',
-      'available',
+      'manufacturer',
+      'batchNumber',
+      'date',
+      'nextDueDate',
     ]
 
     const filteredData = {}

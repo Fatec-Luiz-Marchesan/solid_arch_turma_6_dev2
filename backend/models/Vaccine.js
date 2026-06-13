@@ -1,3 +1,5 @@
+
+
 const mongoose = require('mongoose')
 
 const VaccineSchema = new mongoose.Schema(
@@ -11,16 +13,22 @@ const VaccineSchema = new mongoose.Schema(
     name: {
       type: String,
       required: true,
+      trim: true,
+      maxlength: 100,
     },
 
     manufacturer: {
       type: String,
       required: true,
+      trim: true,
+      maxlength: 100,
     },
 
     batchNumber: {
       type: String,
       required: true,
+      trim: true,
+      maxlength: 50,
     },
 
     date: {
