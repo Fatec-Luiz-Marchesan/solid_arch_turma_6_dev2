@@ -12,4 +12,11 @@ const standardLimiter = rateLimit({
   message: { message: 'Muitas requisições. Tente novamente mais tarde.' }
 });
 
-module.exports = { strictLimiter, standardLimiter };
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  skipSuccessfulRequests: true,
+  message: { message: 'Muitas tentativas. Tente novamente em 15 minutos.' }
+});
+
+module.exports = { strictLimiter, standardLimiter, authLimiter };
