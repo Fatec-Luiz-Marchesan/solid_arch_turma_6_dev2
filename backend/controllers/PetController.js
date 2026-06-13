@@ -11,7 +11,7 @@ class PetController {
       const images = req.files;
 
       if (!name || typeof name !== 'string') {
-        return res.status(422).json({ message: 'Nome inválido ou não informado!' });
+        return res.status(422).json({ message: 'O nome é obrigatório!' });
       }
 
       if (!age || isNaN(parseInt(age))) {
