@@ -31,6 +31,51 @@ npm run test
 
 **Testes:** `npm run test -- tests/unit/location.test.js`
 
+## Monitoramento de Erros com Sentry
+
+O projeto utiliza o Sentry para monitoramento e rastreamento de erros em tempo real no backend Node.js.
+
+### Instalação
+
+Instale as dependências do projeto:
+
+```bash
+npm install
+```
+
+### Configuração
+
+Crie um arquivo `.env` na pasta `backend` e configure as variáveis:
+
+```env
+SENTRY_DSN=seu_dsn_do_sentry
+NODE_ENV=development
+```
+
+### Execução
+
+Inicie a aplicação:
+
+```bash
+npm start
+```
+
+### Teste da Integração
+
+Para validar o funcionamento do Sentry, utilize o endpoint:
+
+```http
+GET /locations/test-sentry
+```
+
+Ao acessar o endpoint, uma exceção será gerada e enviada para o dashboard do Sentry.
+
+### Arquitetura
+
+A integração foi implementada utilizando um Adapter (`SentryAdapter`), respeitando os princípios de Clean Architecture e SOLID. Dessa forma, as regras de negócio permanecem desacopladas da ferramenta de monitoramento.
+
+
+
 ---
 
 ### Task 1: Integrar nova tecnologia - Socket.io para tempo real
