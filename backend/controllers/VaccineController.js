@@ -1,173 +1,60 @@
-const Vaccine = require('../models/Vaccine');
-const Pet = require('../models/Pet');
-const { getUserByToken } = require('../helpers/get-user-by-token');
-const logger = require('../config/logger');
+// controllers/VaccineController.js
 
-module.exports = {
-  async createVaccine(req, res) {
-    try {
-      const user = await getUserByToken(req);
+const validateVaccine = require("../helpers/vaccineValidation");
 
-      const { petId } = req.params;
+const CreateVaccineUseCase = require("../useCases/vaccine/CreateVaccineUseCase");
+const GetVaccineUseCase = require("../useCases/vaccine/GetVaccineUseCase");
+const UpdateVaccineUseCase = require("../useCases/vaccine/UpdateVaccineUseCase");
+const DeleteVaccineUseCase = require("../useCases/vaccine/DeleteVaccineUseCase");
 
-      const {
-        name,
-        manufacturer,
-        batchNumber,
-        date,
-        nextDueDate,
-        administeredBy
-      } = req.body;
+class VaccineController {
 
-      const pet = await Pet.findById(petId);
+    async create(req, res) {
 
-      if (!pet) {
-        return res.status(404).json({
-          message: 'Pet não encontrado'
-        });
-      }
+        const errors = validateVaccine(req.body);
 
-      if (
-        pet.user.toString() !== user._id.toString() &&
-        user.role !== 'admin'
-      ) {
-        return res.status(403).json({
-          message: 'Acesso negado'
-        });
-      }
+        if (errors.length) {
+            return res.status(422).json({ errors });
+        }
 
-      if (!name || !date || !manufacturer || !batchNumber) {
-        return res.status(422).json({
-          message: 'Nome, data, fabricante e lote são obrigatórios'
-        });
-      }
+        const useCase = new CreateVaccineUseCase();
 
-      const vaccine = new Vaccine({
-        petId,
-        name,
-        manufacturer,
-        batchNumber,
-        date,
-        nextDueDate,
-        administeredBy
-      });
+        const vaccine = await useCase.execute(req.body);
 
-      await vaccine.save();
-
-      return res.status(201).json({
-        message: 'Vacina registrada',
-        vaccine
-      });
-    } catch (error) {
-      logger.error(error);
-
-      return res.status(500).json({
-        message: 'Erro interno'
-      });
+        return res.status(201).json(vaccine);
     }
-  },
 
-  async listVaccinesByPet(req, res) {
-    try {
-      const user = await getUserByToken(req);
+    async getAll(req, res) {
 
-      const { petId } = req.params;
+        const useCase = new GetVaccineUseCase();
 
-      const pet = await Pet.findById(petId);
+        const vaccines = await useCase.execute();
 
-      if (!pet) {
-        return res.status(404).json({
-          message: 'Pet não encontrado'
-        });
-      }
-
-      if (
-        pet.user.toString() !== user._id.toString() &&
-        user.role !== 'admin'
-      ) {
-        return res.status(403).json({
-          message: 'Acesso negado'
-        });
-      }
-
-      const vaccines = await Vaccine.find({ petId });
-
-      return res.status(200).json(vaccines);
-    } catch (error) {
-      logger.error(error);
-
-      return res.status(500).json({
-        message: 'Erro interno'
-      });
+        return res.status(200).json(vaccines);
     }
-  },
 
-  async updateVaccine(req, res) {
-    try {
-      const { id } = req.params;
+    async update(req, res) {
 
-      const {
-        name,
-        manufacturer,
-        batchNumber,
-        date,
-        nextDueDate,
-        administeredBy
-      } = req.body;
+        const useCase = new UpdateVaccineUseCase();
 
-      const vaccine = await Vaccine.findById(id);
+        const vaccine = await useCase.execute(
+            req.params.id,
+            req.body
+        );
 
-      if (!vaccine) {
-        return res.status(404).json({
-          message: 'Vacina não encontrada'
-        });
-      }
-
-      if (name) vaccine.name = name;
-      if (manufacturer) vaccine.manufacturer = manufacturer;
-      if (batchNumber) vaccine.batchNumber = batchNumber;
-      if (date) vaccine.date = date;
-      if (nextDueDate) vaccine.nextDueDate = nextDueDate;
-      if (administeredBy) vaccine.administeredBy = administeredBy;
-
-      await vaccine.save();
-
-      return res.status(200).json({
-        message: 'Vacina atualizada',
-        vaccine
-      });
-    } catch (error) {
-      logger.error(error);
-
-      return res.status(500).json({
-        message: 'Erro interno'
-      });
+        return res.status(200).json(vaccine);
     }
-  },
 
-  async deleteVaccine(req, res) {
-    try {
-      const { id } = req.params;
+    async delete(req, res) {
 
-      const vaccine = await Vaccine.findById(id);
+        const useCase = new DeleteVaccineUseCase();
 
-      if (!vaccine) {
-        return res.status(404).json({
-          message: 'Vacina não encontrada'
+        await useCase.execute(req.params.id);
+
+        return res.status(200).json({
+            message: "Vaccine removed"
         });
-      }
-
-      await vaccine.deleteOne();
-
-      return res.status(200).json({
-        message: 'Vacina removida'
-      });
-    } catch (error) {
-      logger.error(error);
-
-      return res.status(500).json({
-        message: 'Erro interno'
-      });
     }
-  }
-};
+}
+
+module.exports = new VaccineController();
