@@ -1,8 +1,15 @@
+require('dotenv').config()
+
 const express = require('express')
 const cors = require('cors')
 const logger = require('./config/logger')
 
+const initializeSentry = require('./config/sentry')
+const sentryErrorMiddleware = require('./middlewares/sentryErrorMiddleware')
+
 const app = express()
+
+initializeSentry()
 
 app.use(express.json())
 
@@ -19,6 +26,8 @@ app.use('/pets', PetRoutes)
 app.use('/users', UserRoutes)
 app.use('/locations', LocationRoutes)
 app.use('/api/admin', AdminRoutes)
+
+app.use(sentryErrorMiddleware)
 
 if (process.env.NODE_ENV !== 'test') {
     const PORT = 5000

@@ -5,6 +5,8 @@ const verifyToken = require('../helpers/check-token')
 router.post('/create', verifyToken, LocationController.create)
 router.delete('/:id', verifyToken, LocationController.delete)
 
+router.get('/test-sentry', LocationController.testSentry)
+
 router.get('/pet/:petId', LocationController.getByPet)
 router.get('/:id', LocationController.getById)
 
