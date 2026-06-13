@@ -6,25 +6,43 @@ const VaccineSchema = new mongoose.Schema({
     ref: 'Pet',
     required: true
   },
+
   name: {
     type: String,
-    required: true
+    required: true,
+    trim: true
   },
+
+  manufacturer: {
+    type: String,
+    required: true,
+    trim: true
+  },
+
+  batchNumber: {
+    type: String,
+    required: true,
+    trim: true
+  },
+
   date: {
     type: Date,
     required: true
   },
+
   nextDueDate: {
     type: Date
   },
+
   administeredBy: {
-    type: String
+    type: String,
+    trim: true
   }
 }, {
   timestamps: true
 });
 
-VaccineSchema.virtual('isOverdue').get(function() {
+VaccineSchema.virtual('isOverdue').get(function () {
   if (!this.nextDueDate) return false;
   return this.nextDueDate < new Date();
 });
