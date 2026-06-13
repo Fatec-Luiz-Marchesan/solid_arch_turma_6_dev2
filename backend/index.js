@@ -14,6 +14,7 @@ const UserRoutes = require('./routers/UserRouters')
 const LocationRoutes = require('./routers/LocationRoutes')
 const AdminRoutes = require('./routers/AdminRoutes')
 const VaccineRoutes = require('./routers/VaccineRoutes')
+const BreedRoutes = require('./routers/BreedRoutes') // NOVO
 
 const app = express()
 
@@ -37,6 +38,7 @@ app.use('/users', UserRoutes)
 app.use('/locations', LocationRoutes)
 app.use('/api/admin', AdminRoutes)
 app.use('/vaccines', VaccineRoutes)
+app.use('/breeds', BreedRoutes) // NOVO
 
 // Error Handler
 app.use(sentryErrorMiddleware)
