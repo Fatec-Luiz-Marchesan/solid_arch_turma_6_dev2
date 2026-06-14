@@ -1,13 +1,14 @@
 const router = require('express').Router()
 const LocationController = require('../controllers/LocationController')
-const verifyToken = require('../helpers/check-token')
+const verifyToken = require('../helpers/verifyToken')
+const { standardLimiter } = require('../middlewares/rateLimiter')
 
-router.post('/create', verifyToken, LocationController.create)
-router.delete('/:id', verifyToken, LocationController.delete)
-
-router.get('/test-sentry', LocationController.testSentry)
-
-router.get('/pet/:petId', LocationController.getByPet)
-router.get('/:id', LocationController.getById)
+router.post('/', standardLimiter, verifyToken, LocationController.create)
+router.get('/', standardLimiter, verifyToken, LocationController.getAll)
+router.get('/nearby', standardLimiter, verifyToken, LocationController.getNearby)
+router.get('/:id', standardLimiter, verifyToken, LocationController.getById)
+router.get('/pet/:petId', standardLimiter, verifyToken, LocationController.getByPetId)
+router.put('/:id', standardLimiter, verifyToken, LocationController.update)
+router.delete('/:id', standardLimiter, verifyToken, LocationController.delete)
 
 module.exports = router

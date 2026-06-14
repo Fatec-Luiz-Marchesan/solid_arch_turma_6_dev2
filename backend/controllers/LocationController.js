@@ -1,138 +1,108 @@
-const Location = require('../models/Location')
-const Pet = require('../models/Pet')
-const axios = require('axios')
-const mongoose = require('mongoose')
-const sentryAdapter = require('../adapters/monitoring/SentryAdapter')
+const CreateLocationUseCase = require('../useCases/location/CreateLocationUseCase')
+const GetLocationUseCase = require('../useCases/location/GetLocationUseCase')
+const UpdateLocationUseCase = require('../useCases/location/UpdateLocationUseCase')
+const DeleteLocationUseCase = require('../useCases/location/DeleteLocationUseCase')
 
-module.exports = class LocationController {
+const createUC = new CreateLocationUseCase()
+const getUC = new GetLocationUseCase()
+const updateUC = new UpdateLocationUseCase()
+const deleteUC = new DeleteLocationUseCase()
 
-  static async create(req, res) {
-    try {
-      let { petId, cep } = req.body
-
-      if (!petId) {
-        return res.status(422).json({ message: 'Pet ID é obrigatório!' })
-      }
-
-      if (!mongoose.Types.ObjectId.isValid(petId)) {
-        return res.status(400).json({ message: 'Pet ID inválido!' })
-      }
-
-      if (!cep) {
-        return res.status(422).json({ message: 'CEP é obrigatório!' })
-      }
-
-      const cepLimpo = cep.replace(/\D/g, '')
-      if (!/^\d{8}$/.test(cepLimpo)) {
-        return res.status(422).json({ message: 'CEP inválido!' })
-      }
-
-      const pet = await Pet.findById(petId).exec()
-      if (!pet) {
-        return res.status(404).json({ message: 'Pet não encontrado!' })
-      }
-
-      const url = `https://viacep.com.br/ws/${cepLimpo}/json/`
-      const response = await axios.get(url)
-
-      if (response.data.erro) {
-        return res.status(422).json({ message: 'CEP inválido!' })
-      }
-
-      const location = new Location({
-        petId,
-        cep: cepLimpo,
-        cidade: response.data.localidade,
-        estado: response.data.uf,
-        bairro: response.data.bairro,
-        rua: response.data.logradouro,
-      })
-
-      await location.save()
-
-      res.status(201).json({
-        message: 'Localização salva com sucesso!',
-        location
-      })
-
-    } catch (error) {
-      res.status(500).json({
-        message: 'Erro ao salvar localização',
-        error: error.message
-      })
+class LocationController {
+    async create(req, res) {
+        try {
+            const location = await createUC.execute(req.body)
+            res.status(201).json({ message: 'Localização criada com sucesso', location })
+        } catch (error) {
+            if (error.message.includes('obrigatório') || error.message.includes('entre')) {
+                res.status(422).json({ message: error.message })
+            } else if (error.message.includes('já existe')) {
+                res.status(409).json({ message: error.message })
+            } else {
+                res.status(500).json({ message: 'Erro interno do servidor' })
+            }
+        }
     }
-  }
-
-  static async getByPet(req, res) {
-    try {
-      const { petId } = req.params
-
-      const locations = await Location
-        .find({ petId })
-        .sort({ createdAt: -1 })
-
-      res.status(200).json({ locations })
-
-    } catch (error) {
-      res.status(500).json({
-        message: 'Erro ao buscar localizações'
-      })
+    
+    async getById(req, res) {
+        try {
+            const location = await getUC.execute(req.params.id)
+            res.status(200).json(location)
+        } catch (error) {
+            if (error.message === 'ID inválido') {
+                res.status(422).json({ message: error.message })
+            } else if (error.message === 'Localização não encontrada') {
+                res.status(404).json({ message: error.message })
+            } else {
+                res.status(500).json({ message: 'Erro interno do servidor' })
+            }
+        }
     }
-  }
-
-  static async getById(req, res) {
-    try {
-      const { id } = req.params
-
-      const location = await Location.findById(id)
-
-      if (!location) {
-        return res.status(404).json({
-          message: 'Localização não encontrada!'
-        })
-      }
-
-      res.status(200).json({ location })
-
-    } catch (error) {
-      res.status(500).json({
-        message: 'Erro ao buscar localização'
-      })
+    
+    async getByPetId(req, res) {
+        try {
+            const location = await getUC.findByPetId(req.params.petId)
+            res.status(200).json(location)
+        } catch (error) {
+            if (error.message === 'petId inválido') {
+                res.status(422).json({ message: error.message })
+            } else if (error.message === 'Localização não encontrada para este pet') {
+                res.status(404).json({ message: error.message })
+            } else {
+                res.status(500).json({ message: 'Erro interno do servidor' })
+            }
+        }
     }
-  }
-
-  static async delete(req, res) {
-    try {
-      const { id } = req.params
-
-      const location = await Location.findByIdAndDelete(id)
-
-      if (!location) {
-        return res.status(404).json({
-          message: 'Localização não encontrada!'
-        })
-      }
-
-      res.status(200).json({
-        message: 'Localização removida com sucesso!'
-      })
-
-    } catch (error) {
-      res.status(500).json({
-        message: 'Erro ao deletar localização'
-      })
+    
+    async getAll(req, res) {
+        try {
+            const { page, limit, isCurrent, city } = req.query
+            const result = await getUC.findAll(page, limit, { isCurrent, city })
+            res.status(200).json(result)
+        } catch (error) {
+            res.status(500).json({ message: 'Erro interno do servidor' })
+        }
     }
-  }
-
-  static async testSentry(req, res) {
-    try {
-      throw new Error('Teste Sentry Location')
-    } catch (error) {
-      sentryAdapter.captureException(error)
-
-      return res.status(500).json({
-        message: 'Erro enviado para o Sentry'
-      })
+    
+    async getNearby(req, res) {
+        try {
+            const { lat, lng, maxDistance } = req.query
+            const locations = await getUC.getNearby(parseFloat(lat), parseFloat(lng), maxDistance)
+            res.status(200).json(locations)
+        } catch (error) {
+            res.status(500).json({ message: 'Erro interno do servidor' })
+        }
     }
-  }
+    
+    async update(req, res) {
+        try {
+            const location = await updateUC.execute(req.params.id, req.body)
+            res.status(200).json({ message: 'Localização atualizada com sucesso', location })
+        } catch (error) {
+            if (error.message.includes('inválido') || error.message.includes('entre')) {
+                res.status(422).json({ message: error.message })
+            } else if (error.message === 'Localização não encontrada') {
+                res.status(404).json({ message: error.message })
+            } else {
+                res.status(500).json({ message: 'Erro interno do servidor' })
+            }
+        }
+    }
+    
+    async delete(req, res) {
+        try {
+            const result = await deleteUC.execute(req.params.id)
+            res.status(200).json(result)
+        } catch (error) {
+            if (error.message === 'ID inválido') {
+                res.status(422).json({ message: error.message })
+            } else if (error.message === 'Localização não encontrada') {
+                res.status(404).json({ message: error.message })
+            } else {
+                res.status(500).json({ message: 'Erro interno do servidor' })
+            }
+        }
+    }
 }
+
+module.exports = new LocationController()
