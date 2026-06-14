@@ -53,4 +53,7 @@ if (process.env.NODE_ENV !== 'test') {
   })
 }
 
-module.exports = app
+
+// Payment Routes
+const PaymentRoutes = require('./routers/PaymentRoutes');
+app.use('/api/payments', PaymentRoutes);
