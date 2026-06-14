@@ -114,19 +114,46 @@ class PaymentController {
 
   async webhook(req, res) {
     try {
-      const { transactionId, status } = req.body;
+      let { transactionId, status } = req.body;
+      
+      // SANITIZAR transactionId - prevenir NoSQL injection
+      if (!transactionId || typeof transactionId !== 'string') {
+        return res.status(400).json({ message: 'Transaction ID inválido' });
+      }
+      
+      // Remover caracteres especiais
+      transactionId = transactionId.replace(/[^a-zA-Z0-9_-]/g, '');
+      
+      // Limitar tamanho
+      if (transactionId.length > 100) {
+        return res.status(400).json({ message: 'Transaction ID muito longo' });
+      }
 
       const payment = await Payment.findOne({ transactionId });
       if (!payment) {
         return res.status(404).json({ message: 'Pagamento não encontrado' });
       }
 
-      if (status === 'paid') {
-        await UpdatePaymentUseCase.updateStatus(payment._id, 'paid');
-      } else if (status === 'failed') {
-        await UpdatePaymentUseCase.updateStatus(payment._id, 'failed');
+      // Validar status
+      const validStatus = ['paid', 'failed', 'refunded', 'canceled'];
+      if (!validStatus.includes(status)) {
+        return res.status(400).json({ message: 'Status inválido' });
       }
 
+      if (status === 'paid') {
+        payment.status = 'paid';
+        payment.paidAt = new Date();
+      } else if (status === 'failed') {
+        payment.status = 'failed';
+      } else if (status === 'refunded') {
+        payment.status = 'refunded';
+        payment.refundedAt = new Date();
+      } else if (status === 'canceled') {
+        payment.status = 'canceled';
+        payment.canceledAt = new Date();
+      }
+
+      await payment.save();
       logger.info(`Webhook processed for transaction: ${transactionId}`);
 
       res.status(200).json({ message: 'Webhook processed' });
