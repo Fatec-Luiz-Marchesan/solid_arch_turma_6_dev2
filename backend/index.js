@@ -13,6 +13,7 @@ const VaccineRoutes = require('./routers/VaccineRoutes')
 const BreedRoutes = require('./routers/BreedRoutes')
 const profileRoutes = require('./routers/ProfileRoutes')
 const DietRoutes = require('./routers/DietRoutes')
+const MessageRoutes = require('./routers/MessageRoutes')
 
 const app = express()
 
@@ -34,6 +35,7 @@ app.use('/vaccines', VaccineRoutes)
 app.use('/breeds', BreedRoutes)
 app.use('/api/profiles', profileRoutes)
 app.use('/diets', DietRoutes)
+app.use('/messages', MessageRoutes)
 
 app.use(sentryErrorMiddleware)
 
