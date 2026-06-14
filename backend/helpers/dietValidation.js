@@ -30,6 +30,8 @@ class DietValidation {
         
         if (!data.meals || data.meals.length === 0) {
             errors.push('pelo menos uma refeição é obrigatória')
+        } else if (data.meals.length > 10) {
+            errors.push('máximo de 10 refeições por dia')
         } else {
             for (let i = 0; i < data.meals.length; i++) {
                 const mealValidation = this.validateMeal(data.meals[i])
@@ -54,10 +56,14 @@ class DietValidation {
         const errors = []
         
         if (data.meals && data.meals.length > 0) {
-            for (let i = 0; i < data.meals.length; i++) {
-                const mealValidation = this.validateMeal(data.meals[i])
-                if (!mealValidation.isValid) {
-                    errors.push(`Refeição ${i + 1}: ${mealValidation.errors.join(', ')}`)
+            if (data.meals.length > 10) {
+                errors.push('máximo de 10 refeições por dia')
+            } else {
+                for (let i = 0; i < data.meals.length; i++) {
+                    const mealValidation = this.validateMeal(data.meals[i])
+                    if (!mealValidation.isValid) {
+                        errors.push(`Refeição ${i + 1}: ${mealValidation.errors.join(', ')}`)
+                    }
                 }
             }
         }

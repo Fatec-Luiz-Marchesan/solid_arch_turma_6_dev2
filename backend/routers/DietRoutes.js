@@ -3,11 +3,11 @@ const DietController = require('../controllers/DietController')
 const verifyToken = require('../helpers/verifyToken')
 const { standardLimiter } = require('../middlewares/rateLimiter')
 
-router.post('/', verifyToken, standardLimiter, DietController.create)
-router.get('/', verifyToken, standardLimiter, DietController.getAll)
-router.get('/:id', verifyToken, standardLimiter, DietController.getById)
-router.get('/pet/:petId', verifyToken, standardLimiter, DietController.getByPetId)
-router.put('/:id', verifyToken, standardLimiter, DietController.update)
-router.delete('/:id', verifyToken, standardLimiter, DietController.delete)
+router.post('/', standardLimiter, verifyToken, DietController.create)
+router.get('/', standardLimiter, verifyToken, DietController.getAll)
+router.get('/:id', standardLimiter, verifyToken, DietController.getById)
+router.get('/pet/:petId', standardLimiter, verifyToken, DietController.getByPetId)
+router.put('/:id', standardLimiter, verifyToken, DietController.update)
+router.delete('/:id', standardLimiter, verifyToken, DietController.delete)
 
 module.exports = router
