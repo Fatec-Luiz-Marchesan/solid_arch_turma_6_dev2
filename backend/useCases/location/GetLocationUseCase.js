@@ -2,6 +2,10 @@ const Location = require('../../models/Location')
 const LocationValidation = require('../../helpers/locationValidation')
 
 class GetLocationUseCase {
+    escapeRegExp(string) {
+        return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    }
+    
     async execute(id) {
         if (!LocationValidation.validateId(id)) {
             throw new Error('ID inválido')
@@ -38,7 +42,8 @@ class GetLocationUseCase {
         }
         
         if (filters.city) {
-            query['address.city'] = new RegExp(filters.city, 'i')
+            const sanitizedCity = this.escapeRegExp(filters.city)
+            query['address.city'] = new RegExp(sanitizedCity, 'i')
         }
         
         const pageNum = parseInt(page, 10)

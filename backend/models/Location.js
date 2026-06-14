@@ -4,8 +4,7 @@ const locationSchema = new mongoose.Schema({
     petId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Pet',
-        required: true,
-        unique: true
+        required: true
     },
     latitude: {
         type: Number,

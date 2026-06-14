@@ -10,6 +10,11 @@ class CreateLocationUseCase {
             throw new Error(validation.errors.join(', '))
         }
         
+        const petIdRegex = /^[0-9a-fA-F]{24}$/
+        if (!petIdRegex.test(data.petId)) {
+            throw new Error('petId inválido')
+        }
+        
         const existing = await Location.findOne({ petId: data.petId })
         
         if (existing) {
