@@ -31,6 +31,10 @@ class GetProfileUseCase {
         return profile.toJSON()
     }
 
+    escapeRegExp(string) {
+        return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    }
+
     async findAll(filters = {}, page = 1, limit = 10) {
         const query = {}
 
@@ -39,7 +43,8 @@ class GetProfileUseCase {
         }
 
         if (filters.city) {
-            query['address.city'] = new RegExp(filters.city, 'i')
+            const sanitizedCity = this.escapeRegExp(filters.city)
+            query['address.city'] = new RegExp(sanitizedCity, 'i')
         }
 
         const pageNum = parseInt(page, 10)
