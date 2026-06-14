@@ -15,7 +15,7 @@ class CreateLocationUseCase {
             throw new Error('petId inválido')
         }
         
-        const existing = await Location.findOne({ petId: data.petId })
+        const existing = await Location.findOne({ petId: { $eq: data.petId } })
         
         if (existing) {
             throw new Error('Localização já existe para este pet')
