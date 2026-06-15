@@ -3,10 +3,16 @@ const app = require('../../index')
 const User = require('../../models/User')
 const jwt = require('jsonwebtoken')
 
+jest.mock('uuid', () => ({
+  v4: () => 'mock-uuid-123'
+}))
+
 describe('Teste de Upload - Pets', () => {
     let token
 
     beforeAll(async () => {
+        await User.deleteMany({})
+        
         const user = new User({
             name: 'teste Upload',
             email: 'upload@teste.com',
@@ -45,6 +51,3 @@ describe('Teste de Upload - Pets', () => {
         expect(res.body).toHaveProperty('pets')
     })
 })
-
-
-
