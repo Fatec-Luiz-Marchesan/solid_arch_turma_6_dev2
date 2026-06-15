@@ -15,7 +15,8 @@ const DietRoutes = require('./routers/DietRoutes')
 const MessageRoutes = require('./routers/MessageRoutes')
 const DockerRoutes = require('./routers/DockerRoutes')
 const UploadRoutes = require('./routers/UploadRoutes')
-const PaymentRoutes = require('./routers/PaymentRoutes')   // Task 31
+const PaymentRoutes = require('./routers/PaymentRoutes')
+const SettingsRoutes = require('./routers/SettingsRoutes')   
 
 const app = express()
 
@@ -40,7 +41,8 @@ app.use('/diets', DietRoutes)
 app.use('/messages', MessageRoutes)
 app.use('/api/docker', DockerRoutes)
 app.use('/uploads', UploadRoutes)
-app.use('/api/payments', PaymentRoutes)   // Task 31
+app.use('/api/payments', PaymentRoutes)
+app.use('/api/settings', SettingsRoutes)   
 
 app.get('/health', (req, res) => {
     res.json({ status: 'ok', docker: process.env.DOCKER_ENV === 'true' })
