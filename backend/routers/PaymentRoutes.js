@@ -4,16 +4,16 @@ const PaymentController = require('../controllers/PaymentController');
 const authMiddleware = require('../middlewares/authMiddleware');
 const { apiLimiter, authLimiter } = require('../middlewares/rateLimiter');
 
-// Rotas com rate limiting
-router.post('/', authMiddleware, apiLimiter, PaymentController.create);
-router.get('/', authMiddleware, apiLimiter, PaymentController.getByUser);
-router.get('/stats', authMiddleware, apiLimiter, PaymentController.getStats);
-router.get('/:id', authMiddleware, apiLimiter, PaymentController.getById);
-router.get('/pet/:petId', authMiddleware, apiLimiter, PaymentController.getByPet);
-router.post('/:id/cancel', authMiddleware, apiLimiter, PaymentController.cancel);
-router.post('/:id/refund', authMiddleware, apiLimiter, PaymentController.refund);
-
-// Webhook tem rate limit mais restritivo
+// Webhook tem rate limit restritivo (sem auth)
 router.post('/webhook', authLimiter, PaymentController.webhook);
+
+// Rotas protegidas: primeiro apiLimiter, depois authMiddleware
+router.post('/', apiLimiter, authMiddleware, PaymentController.create);
+router.get('/', apiLimiter, authMiddleware, PaymentController.getByUser);
+router.get('/stats', apiLimiter, authMiddleware, PaymentController.getStats);
+router.get('/:id', apiLimiter, authMiddleware, PaymentController.getById);
+router.get('/pet/:petId', apiLimiter, authMiddleware, PaymentController.getByPet);
+router.post('/:id/cancel', apiLimiter, authMiddleware, PaymentController.cancel);
+router.post('/:id/refund', apiLimiter, authMiddleware, PaymentController.refund);
 
 module.exports = router;

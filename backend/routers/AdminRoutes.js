@@ -1,17 +1,21 @@
-const router = require('express').Router()
-const AdminController = require('../controllers/AdminController')
-const verifyToken = require('../helpers/check-token')
-const { authLimiter, standardLimiter, strictLimiter } = require('../middlewares/rateLimiter')
+const express = require('express');
+const router = express.Router();
+const AdminController = require('../controllers/AdminController');
+const checkToken = require('../helpers/check-token');
+const { authLimiter, apiLimiter } = require('../middlewares/rateLimiter');
 
-router.post('/register', authLimiter, AdminController.createAdmin)
-router.post('/login', authLimiter, AdminController.loginAdmin)
-router.get('/all', standardLimiter, verifyToken, AdminController.getAllAdmins)
-router.get('/stats', standardLimiter, verifyToken, AdminController.getDashboardStats)
-router.get('/:id', standardLimiter, verifyToken, AdminController.getAdminById)
-router.put('/:id', standardLimiter, verifyToken, AdminController.updateAdmin)
-router.put('/:id/password', strictLimiter, verifyToken, AdminController.updatePassword)
-router.patch('/:id/status', standardLimiter, verifyToken, AdminController.toggleAdminStatus)
-router.patch('/:id/permissions', standardLimiter, verifyToken, AdminController.updatePermissions)
-router.delete('/:id', strictLimiter, verifyToken, AdminController.deleteAdmin)
+// Rotas públicas com rate limit restritivo
+router.post('/register', authLimiter, AdminController.createAdmin);
+router.post('/login', authLimiter, AdminController.loginAdmin);
 
-module.exports = router
+// Rotas protegidas: primeiro apiLimiter, depois checkToken
+router.get('/dashboard', apiLimiter, checkToken, AdminController.getDashboardStats);
+router.get('/', apiLimiter, checkToken, AdminController.getAllAdmins);
+router.get('/:id', apiLimiter, checkToken, AdminController.getAdminById);
+router.put('/:id', apiLimiter, checkToken, AdminController.updateAdmin);
+router.put('/:id/password', apiLimiter, checkToken, AdminController.updatePassword);
+router.put('/:id/permissions', apiLimiter, checkToken, AdminController.updatePermissions);
+router.patch('/:id/toggle-status', apiLimiter, checkToken, AdminController.toggleAdminStatus);
+router.delete('/:id', apiLimiter, checkToken, AdminController.deleteAdmin);
+
+module.exports = router;
