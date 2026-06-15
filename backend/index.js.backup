@@ -15,7 +15,6 @@ const DietRoutes = require('./routers/DietRoutes')
 const MessageRoutes = require('./routers/MessageRoutes')
 const DockerRoutes = require('./routers/DockerRoutes')
 const UploadRoutes = require('./routers/UploadRoutes')
-const PaymentRoutes = require('./routers/PaymentRoutes')   // Task 31
 
 const app = express()
 
@@ -40,7 +39,6 @@ app.use('/diets', DietRoutes)
 app.use('/messages', MessageRoutes)
 app.use('/api/docker', DockerRoutes)
 app.use('/uploads', UploadRoutes)
-app.use('/api/payments', PaymentRoutes)   // Task 31
 
 app.get('/health', (req, res) => {
     res.json({ status: 'ok', docker: process.env.DOCKER_ENV === 'true' })
@@ -55,5 +53,6 @@ if (process.env.NODE_ENV !== 'test') {
         console.log(`Servidor rodando na porta ${PORT}`)
     })
 }
+
 
 module.exports = app
