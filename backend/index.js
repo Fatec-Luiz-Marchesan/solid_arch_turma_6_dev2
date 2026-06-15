@@ -1,5 +1,4 @@
 require('dotenv').config()
-
 const express = require('express')
 const cors = require('cors')
 const logger = require('./config/logger')
@@ -14,6 +13,7 @@ const BreedRoutes = require('./routers/BreedRoutes')
 const profileRoutes = require('./routers/ProfileRoutes')
 const DietRoutes = require('./routers/DietRoutes')
 const MessageRoutes = require('./routers/MessageRoutes')
+const DockerRoutes = require('./routers/DockerRoutes')
 
 const app = express()
 
@@ -36,6 +36,11 @@ app.use('/breeds', BreedRoutes)
 app.use('/api/profiles', profileRoutes)
 app.use('/diets', DietRoutes)
 app.use('/messages', MessageRoutes)
+app.use('/api/docker', DockerRoutes)
+
+app.get('/health', (req, res) => {
+    res.json({ status: 'ok', docker: process.env.DOCKER_ENV === 'true' })
+})
 
 app.use(sentryErrorMiddleware)
 

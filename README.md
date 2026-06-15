@@ -5,6 +5,25 @@ A estrutura do projeto atual é baseada em **Clean Architecture, TDD e Princípi
 
 A escala de pontuação (story points) segue a sequência de Fibonacci adaptada: **3, 5, 8, 13, 21, 35 e 54**.
 
+O que foi feito
+
+Containerização do backend com Docker seguindo SOLID.
+
+Arquivos criados
+Dockerfile - Imagem do Node.js
+
+docker-compose.yml - Sobe backend + MongoDB
+
+backend/config/docker.js - Alterna entre Docker/local
+
+backend/controllers/DockerController.js - Endpoint de status
+
+Makefile - Comandos rápidos
+
+Como testar
+bash
+docker compose up -d
+curl http://localhost:5000/api/docker/status
 ## Testes com Jest
 
 Este projeto utiliza Jest para testes automatizados com relatório de cobertura de código.
