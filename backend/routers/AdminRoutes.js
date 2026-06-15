@@ -1,19 +1,20 @@
-const router = require('express').Router()
-const AdminController = require('../controllers/AdminController')
-const verifyToken = require('../helpers/check-token')
-const { authLimiter, standardLimiter, strictLimiter } = require('../middlewares/rateLimiter')
-const cacheMiddleware = require('../middlewares/cacheMiddleware')
+const express = require('express');
+const router = express.Router();
+const AdminController = require('../controllers/AdminController');
+const verifyToken = require('../helpers/check-token');
+const { authLimiter, apiLimiter, strictLimiter } = require('../middlewares/rateLimiter');
+const cacheMiddleware = require('../middlewares/cacheMiddleware');
 
-router.post('/register', authLimiter, AdminController.createAdmin)
-router.post('/login', authLimiter, AdminController.loginAdmin)
-router.get('/all', standardLimiter, verifyToken, cacheMiddleware, AdminController.getAllAdmins)
-router.get('/stats', standardLimiter, verifyToken, AdminController.getDashboardStats)
-router.get('/:id', standardLimiter, verifyToken, AdminController.getAdminById)
-router.put('/:id', standardLimiter, verifyToken, AdminController.updateAdmin)
-router.put('/:id/password', strictLimiter, verifyToken, AdminController.updatePassword)
-router.patch('/:id/status', standardLimiter, verifyToken, AdminController.toggleAdminStatus)
-router.patch('/:id/permissions', standardLimiter, verifyToken, AdminController.updatePermissions)
-router.delete('/:id', strictLimiter, verifyToken, AdminController.deleteAdmin)
-router.delete('/cache/clear', standardLimiter, verifyToken, AdminController.clearCache)
+router.post('/register', authLimiter, AdminController.createAdmin);
+router.post('/login', authLimiter, AdminController.loginAdmin);
+router.get('/all', apiLimiter, verifyToken, cacheMiddleware, AdminController.getAllAdmins);
+router.get('/stats', apiLimiter, verifyToken, AdminController.getDashboardStats);
+router.get('/:id', apiLimiter, verifyToken, AdminController.getAdminById);
+router.put('/:id', apiLimiter, verifyToken, AdminController.updateAdmin);
+router.put('/:id/password', strictLimiter, verifyToken, AdminController.updatePassword);
+router.patch('/:id/status', apiLimiter, verifyToken, AdminController.toggleAdminStatus);
+router.patch('/:id/permissions', apiLimiter, verifyToken, AdminController.updatePermissions);
+router.delete('/:id', strictLimiter, verifyToken, AdminController.deleteAdmin);
+router.delete('/cache/clear', apiLimiter, verifyToken, AdminController.clearCache);
 
-module.exports = router
+module.exports = router;
