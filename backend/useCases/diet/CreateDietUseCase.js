@@ -10,9 +10,13 @@ class CreateDietUseCase {
         }
         
         const validation = DietValidation.validateCreate(data)
-        
         if (!validation.isValid) {
             throw new Error(validation.errors.join(', '))
+        }
+        
+        const newFieldsValidation = DietValidation.validateNewFields(data)
+        if (!newFieldsValidation.isValid) {
+            throw new Error(newFieldsValidation.errors.join(', '))
         }
         
         const activeDiet = await Diet.findOne({ 

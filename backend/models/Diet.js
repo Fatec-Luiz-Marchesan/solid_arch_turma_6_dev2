@@ -48,7 +48,51 @@ const dietSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         required: true
-    }
+    },
+    mealFrequency: {
+        type: String,
+        enum: ['poucas', 'normal', 'muitas'],
+        default: 'normal'
+    },
+    waterIntake: {
+        recommended: {
+            type: Number,
+            min: 0,
+            max: 5000,
+            default: 0
+        },
+        unit: {
+            type: String,
+            enum: ['ml', 'l'],
+            default: 'ml'
+        }
+    },
+    nutritionalGoals: {
+        weightGain: { type: Boolean, default: false },
+        weightLoss: { type: Boolean, default: false },
+        maintenance: { type: Boolean, default: true },
+        specificHealth: { type: String, trim: true }
+    },
+    weeklyMenu: [{
+        day: {
+            type: String,
+            enum: ['segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado', 'domingo']
+        },
+        meals: [{
+            name: String,
+            time: String,
+            calories: Number
+        }]
+    }],
+    dietaryRestrictions: [{
+        type: String,
+        enum: ['sem gluten', 'sem lactose', 'vegetariano', 'vegano', 'hipoalergenico']
+    }],
+    supplements: [{
+        name: { type: String, trim: true },
+        dosage: { type: String },
+        frequency: { type: String }
+    }]
 }, {
     timestamps: true
 })
