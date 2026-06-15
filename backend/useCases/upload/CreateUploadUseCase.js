@@ -1,5 +1,6 @@
 const path = require('path')
 const fs = require('fs').promises
+const { v4: uuidv4 } = require('uuid')
 const { validateFile, validateUploadReference } = require('../../helpers/uploadValidation')
 
 class CreateUploadUseCase {
@@ -18,18 +19,23 @@ class CreateUploadUseCase {
       throw new Error(referenceValidation.errors.join(', '))
     }
     
-    const timestamp = Date.now()
-    const uniqueFileName = `${timestamp}-${file.originalname.replace(/\s/g, '-')}`
+    const fileExt = path.extname(file.originalname).toLowerCase()
+    const safeFileName = `${uuidv4()}${fileExt}`
     const uploadDir = path.join(__dirname, '../../public/uploads')
-    const filePath = path.join(uploadDir, uniqueFileName)
+    const safePath = path.resolve(uploadDir)
+    const filePath = path.join(safePath, safeFileName)
     
-    await fs.mkdir(uploadDir, { recursive: true })
+    if (!filePath.startsWith(safePath)) {
+      throw new Error('Caminho de arquivo inválido')
+    }
+    
+    await fs.mkdir(safePath, { recursive: true })
     await fs.writeFile(filePath, file.buffer)
     
     const uploadData = {
-      originalName: file.originalname,
-      fileName: uniqueFileName,
-      filePath: `/uploads/${uniqueFileName}`,
+      originalName: path.basename(file.originalname),
+      fileName: safeFileName,
+      filePath: `/uploads/${safeFileName}`,
       fileSize: file.size,
       mimeType: file.mimetype,
       relatedTo: {

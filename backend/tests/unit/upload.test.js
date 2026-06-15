@@ -3,6 +3,10 @@ const app = require('../../index')
 const User = require('../../models/User')
 const jwt = require('jsonwebtoken')
 
+jest.mock('uuid', () => ({
+  v4: () => 'mock-uuid-123'
+}))
+
 describe('Teste de Upload - Pets', () => {
     let token
 
