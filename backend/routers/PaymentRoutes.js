@@ -1,0 +1,14 @@
+const express = require('express');
+const router = express.Router();
+const PaymentController = require('../controllers/PaymentController');
+const authMiddleware = require('../middlewares/authMiddleware');
+const { apiLimiter } = require('../middlewares/rateLimiter');
+router.use(apiLimiter, authMiddleware);
+router.post('/', PaymentController.create);
+router.get('/', PaymentController.getUserPayments);
+router.get('/stats', PaymentController.getStats);
+router.get('/:id', PaymentController.getById);
+router.get('/pet/:petId', PaymentController.getByPet);
+router.post('/:id/cancel', PaymentController.cancel);
+router.post('/:id/refund', PaymentController.refund);
+module.exports = router;
