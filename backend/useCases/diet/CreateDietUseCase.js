@@ -10,12 +10,36 @@ class CreateDietUseCase {
             throw new Error(validation.errors.join(', '))
         }
         
+        const activeDiet = await Diet.findOne({ 
+            petId: data.petId, 
+            isActive: true 
+        })
+        
+        if (activeDiet && data.isActive !== false) {
+            throw new Error('Pet já possui uma dieta ativa')
+        }
+        
         const diet = new Diet(data)
         await diet.save()
         
         logger.info(`Dieta criada para petId: ${data.petId}`)
         
-        return diet.toJSON()
+        return {
+            ...diet.toJSON(),
+            message: 'Dieta criada com sucesso',
+            stats: this.calculateDailySummary(diet)
+        }
+    }
+    
+    calculateDailySummary(diet) {
+        const meals = diet.meals || []
+        const totalCalories = meals.reduce((sum, meal) => sum + (meal.calories || 0), 0)
+        
+        return {
+            totalCalories,
+            mealsCount: meals.length,
+            schedule: meals.map(m => ({ name: m.name, time: m.time }))
+        }
     }
 }
 
