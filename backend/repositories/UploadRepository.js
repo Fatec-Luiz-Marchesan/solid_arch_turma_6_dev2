@@ -1,4 +1,5 @@
 const Upload = require('../models/Upload')
+const mongoose = require('mongoose')
 
 const ALLOWED_MODEL_TYPES = ['pet', 'user', 'vaccine', 'none']
 
@@ -23,6 +24,9 @@ class UploadRepository {
     }
     
     if (filters.uploadedBy) {
+      if (!mongoose.Types.ObjectId.isValid(filters.uploadedBy)) {
+        throw new Error('ID do usuário inválido')
+      }
       query.uploadedBy = filters.uploadedBy
     }
     
@@ -42,6 +46,9 @@ class UploadRepository {
   async findByRelatedModel(modelType, modelId) {
     if (!ALLOWED_MODEL_TYPES.includes(modelType)) {
       throw new Error('Tipo de modelo inválido')
+    }
+    if (!mongoose.Types.ObjectId.isValid(modelId)) {
+      throw new Error('ID do modelo inválido')
     }
     return await Upload.find({
       'relatedTo.modelType': modelType,

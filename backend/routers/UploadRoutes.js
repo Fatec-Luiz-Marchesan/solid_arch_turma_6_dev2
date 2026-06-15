@@ -19,9 +19,9 @@ const listLimiter = rateLimit({
   message: { error: 'Muitas requisições. Tente novamente em 1 minuto' }
 })
 
-router.post('/', verifyToken, uploadLimiter, upload.single('file'), (req, res) => UploadController.create(req, res))
-router.get('/', verifyToken, listLimiter, (req, res) => UploadController.list(req, res))
-router.get('/:id', verifyToken, listLimiter, (req, res) => UploadController.getById(req, res))
-router.delete('/:id', verifyToken, uploadLimiter, (req, res) => UploadController.delete(req, res))
+router.post('/', uploadLimiter, verifyToken, upload.single('file'), (req, res) => UploadController.create(req, res))
+router.get('/', listLimiter, verifyToken, (req, res) => UploadController.list(req, res))
+router.get('/:id', listLimiter, verifyToken, (req, res) => UploadController.getById(req, res))
+router.delete('/:id', uploadLimiter, verifyToken, (req, res) => UploadController.delete(req, res))
 
 module.exports = router
