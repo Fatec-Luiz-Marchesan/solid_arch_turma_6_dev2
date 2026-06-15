@@ -5,8 +5,11 @@ const verifyToken = require('../helpers/check-token');
 const { authLimiter, apiLimiter, strictLimiter } = require('../middlewares/rateLimiter');
 const cacheMiddleware = require('../middlewares/cacheMiddleware');
 
+// Rotas públicas com rate limit restritivo
 router.post('/register', authLimiter, AdminController.createAdmin);
 router.post('/login', authLimiter, AdminController.loginAdmin);
+
+// Rotas protegidas com rate limit e cache (Task 33)
 router.get('/all', apiLimiter, verifyToken, cacheMiddleware, AdminController.getAllAdmins);
 router.get('/stats', apiLimiter, verifyToken, AdminController.getDashboardStats);
 router.get('/:id', apiLimiter, verifyToken, AdminController.getAdminById);
