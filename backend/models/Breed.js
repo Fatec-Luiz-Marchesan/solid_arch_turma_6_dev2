@@ -1,5 +1,3 @@
-// models/Breed.js
-
 const mongoose = require("mongoose");
 
 const BreedSchema = new mongoose.Schema(
