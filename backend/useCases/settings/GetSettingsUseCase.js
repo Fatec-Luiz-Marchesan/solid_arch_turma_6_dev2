@@ -1,6 +1,5 @@
 const Settings = require('../../models/Settings');
 const SettingsValidation = require('../../helpers/settingsValidation');
-const logger = require('../../config/logger');
 
 class GetSettingsUseCase {
   async getByUserId(userId) {

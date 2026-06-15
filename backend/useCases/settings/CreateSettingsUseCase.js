@@ -4,6 +4,10 @@ const logger = require('../../config/logger');
 
 class CreateSettingsUseCase {
   async execute(data) {
+    if (!SettingsValidation.validateObjectId(data.userId)) {
+      throw new Error('ID de usuário inválido');
+    }
+
     const validation = SettingsValidation.validateCreate(data);
     if (!validation.isValid) {
       throw new Error(validation.errors.join(', '));

@@ -4,6 +4,10 @@ const logger = require('../../config/logger');
 
 class UpdateSettingsUseCase {
   async execute(userId, updateData) {
+    if (!SettingsValidation.validateObjectId(userId)) {
+      throw new Error('ID de usuário inválido');
+    }
+
     const validation = SettingsValidation.validateUpdate(updateData);
     if (!validation.isValid) {
       throw new Error(validation.errors.join(', '));
@@ -14,7 +18,6 @@ class UpdateSettingsUseCase {
       throw new Error('Configurações não encontradas');
     }
 
-    // Aplica atualizações parciais
     if (updateData.notifications) {
       settings.notifications = { ...settings.notifications, ...updateData.notifications };
     }

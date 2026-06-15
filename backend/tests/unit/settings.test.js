@@ -9,6 +9,10 @@ jest.mock('../../models/Settings');
 jest.mock('../../config/logger');
 
 describe('Settings - Unit Tests', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
   describe('Validation', () => {
     test('validateNotificationSettings retorna true para objeto válido', () => {
       expect(SettingsValidation.validateNotificationSettings({ email: true, push: false })).toBe(true);
@@ -33,7 +37,8 @@ describe('Settings - Unit Tests', () => {
   describe('CreateSettingsUseCase', () => {
     test('cria configurações com sucesso', async () => {
       const mockSave = jest.fn().mockResolvedValue(true);
-      Settings.mockImplementation(() => ({ save: mockSave, toJSON: () => ({ userId: 'u1' }) }));
+      const mockToJSON = jest.fn().mockReturnValue({ userId: 'u1' });
+      Settings.mockImplementation(() => ({ save: mockSave, toJSON: mockToJSON }));
       Settings.findOne.mockResolvedValue(null);
       const result = await CreateSettingsUseCase.execute({ userId: '507f1f77bcf86cd799439011' });
       expect(result).toHaveProperty('userId', 'u1');
