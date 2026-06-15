@@ -179,3 +179,47 @@ describe('DietController', () => {
 })
 
 console.log('Testes do Diet finalizados!')
+describe('Diet Report', () => {
+    test('deve gerar relatorio com estatisticas', async () => {
+        const req = { query: { petId: '123456789012345678901234' }, userId: '123' }
+        const res = { status: jest.fn().mockReturnThis(), json: jest.fn() }
+        
+        jest.spyOn(GetDietUseCase.prototype, 'findByPetId').mockResolvedValue([
+            { 
+                _id: '1', 
+                isActive: true, 
+                stats: { totalCalories: 800 },
+                meals: [{ name: 'Café', time: '08:00' }],
+                petId: { name: 'Rex' },
+                createdAt: new Date()
+            }
+        ])
+        
+        await DietController.getReport(req, res)
+        expect(res.status).toHaveBeenCalledWith(200)
+        expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+            success: true,
+            data: expect.objectContaining({
+                totalDiets: expect.any(Number),
+                activeDiets: expect.any(Number)
+            })
+        }))
+    })
+})
+
+describe('Diet Stats', () => {
+    test('deve calcular estatisticas corretamente', () => {
+        const getUC = new GetDietUseCase()
+        const diet = {
+            meals: [
+                { calories: 300, proteins: 20, carbs: 30, fats: 10 },
+                { calories: 400, proteins: 30, carbs: 40, fats: 15 }
+            ]
+        }
+        
+        const stats = getUC.calculateStats(diet)
+        expect(stats.totalCalories).toBe(700)
+        expect(stats.totalProteins).toBe(50)
+        expect(stats.mealsCount).toBe(2)
+    })
+})

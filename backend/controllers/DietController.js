@@ -89,6 +89,50 @@ class DietController {
             }
         }
     }
+    
+    async getReport(req, res) {
+        try {
+            const { petId, startDate, endDate } = req.query
+            let diets = []
+            
+            if (petId) {
+                diets = await getUC.findByPetId(petId)
+            } else {
+                const result = await getUC.findAll(1, 100, {})
+                diets = result.diets
+            }
+            
+            if (startDate && endDate) {
+                const start = new Date(startDate)
+                const end = new Date(endDate)
+                diets = diets.filter(d => {
+                    const createdAt = new Date(d.createdAt)
+                    return createdAt >= start && createdAt <= end
+                })
+            }
+            
+            const report = {
+                totalDiets: diets.length,
+                activeDiets: diets.filter(d => d.isActive).length,
+                totalCalories: diets.reduce((sum, d) => sum + (d.totalDailyCalories || 0), 0),
+                averageCalories: diets.length > 0 
+                    ? Math.round(diets.reduce((sum, d) => sum + (d.totalDailyCalories || 0), 0) / diets.length) 
+                    : 0,
+                diets: diets.map(d => ({
+                    id: d._id,
+                    petName: d.petId?.name,
+                    mealsCount: d.meals?.length || 0,
+                    totalCalories: d.totalDailyCalories || 0,
+                    isActive: d.isActive,
+                    createdAt: d.createdAt
+                }))
+            }
+            
+            res.status(200).json({ success: true, data: report })
+        } catch (error) {
+            res.status(500).json({ success: false, error: error.message })
+        }
+    }
 }
 
 module.exports = new DietController()

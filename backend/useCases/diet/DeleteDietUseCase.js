@@ -1,3 +1,4 @@
+const mongoose = require('mongoose')
 const Diet = require('../../models/Diet')
 const DietValidation = require('../../helpers/dietValidation')
 const logger = require('../../config/logger')
