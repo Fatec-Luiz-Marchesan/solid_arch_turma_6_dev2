@@ -1,3 +1,5 @@
+const mongoose = require('mongoose');
+
 class SettingsValidation {
   static validateNotificationSettings(notifications) {
     if (!notifications) return true;
@@ -64,7 +66,16 @@ class SettingsValidation {
   }
 
   static validateObjectId(id) {
-    return id && /^[0-9a-fA-F]{24}$/.test(id);
+    if (!id) return false;
+    const isValid = mongoose.Types.ObjectId.isValid(id);
+    return isValid;
+  }
+
+  static toObjectId(id) {
+    if (this.validateObjectId(id)) {
+      return new mongoose.Types.ObjectId(id);
+    }
+    return null;
   }
 }
 

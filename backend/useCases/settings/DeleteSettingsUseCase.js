@@ -4,10 +4,11 @@ const logger = require('../../config/logger');
 
 class DeleteSettingsUseCase {
   async execute(userId) {
-    if (!SettingsValidation.validateObjectId(userId)) {
+    const objectId = SettingsValidation.toObjectId(userId);
+    if (!objectId) {
       throw new Error('ID de usuário inválido');
     }
-    const settings = await Settings.findOneAndDelete({ userId });
+    const settings = await Settings.findOneAndDelete({ userId: objectId });
     if (!settings) {
       throw new Error('Configurações não encontradas');
     }

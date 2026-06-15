@@ -4,7 +4,8 @@ const logger = require('../../config/logger');
 
 class UpdateSettingsUseCase {
   async execute(userId, updateData) {
-    if (!SettingsValidation.validateObjectId(userId)) {
+    const objectId = SettingsValidation.toObjectId(userId);
+    if (!objectId) {
       throw new Error('ID de usuário inválido');
     }
 
@@ -13,7 +14,7 @@ class UpdateSettingsUseCase {
       throw new Error(validation.errors.join(', '));
     }
 
-    const settings = await Settings.findOne({ userId });
+    const settings = await Settings.findOne({ userId: objectId });
     if (!settings) {
       throw new Error('Configurações não encontradas');
     }

@@ -3,10 +3,11 @@ const SettingsValidation = require('../../helpers/settingsValidation');
 
 class GetSettingsUseCase {
   async getByUserId(userId) {
-    if (!SettingsValidation.validateObjectId(userId)) {
+    const objectId = SettingsValidation.toObjectId(userId);
+    if (!objectId) {
       throw new Error('ID de usuário inválido');
     }
-    const settings = await Settings.findOne({ userId });
+    const settings = await Settings.findOne({ userId: objectId });
     if (!settings) {
       throw new Error('Configurações não encontradas');
     }
@@ -14,10 +15,11 @@ class GetSettingsUseCase {
   }
 
   async getOrCreate(userId) {
-    if (!SettingsValidation.validateObjectId(userId)) {
+    const objectId = SettingsValidation.toObjectId(userId);
+    if (!objectId) {
       throw new Error('ID de usuário inválido');
     }
-    const settings = await Settings.getOrCreate(userId);
+    const settings = await Settings.getOrCreate(objectId);
     return settings.toJSON();
   }
 }

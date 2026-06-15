@@ -1,10 +1,13 @@
 const Settings = require('../../models/Settings');
 const SettingsValidation = require('../../helpers/settingsValidation');
 const logger = require('../../config/logger');
+const mongoose = require('mongoose');
 
 class CreateSettingsUseCase {
   async execute(data) {
-    if (!SettingsValidation.validateObjectId(data.userId)) {
+    // Sanitiza userId e converte para ObjectId
+    const userId = SettingsValidation.toObjectId(data.userId);
+    if (!userId) {
       throw new Error('ID de usuário inválido');
     }
 
@@ -13,13 +16,14 @@ class CreateSettingsUseCase {
       throw new Error(validation.errors.join(', '));
     }
 
-    const existing = await Settings.findOne({ userId: data.userId });
+    // Query usando ObjectId (seguro)
+    const existing = await Settings.findOne({ userId });
     if (existing) {
       throw new Error('Configurações já existem para este usuário');
     }
 
     const settings = new Settings({
-      userId: data.userId,
+      userId,
       notifications: data.notifications || { email: true, push: true, sms: false },
       privacy: data.privacy || { profileVisibility: 'public', showEmail: false, showPhone: true },
       language: data.language || 'pt-BR',
