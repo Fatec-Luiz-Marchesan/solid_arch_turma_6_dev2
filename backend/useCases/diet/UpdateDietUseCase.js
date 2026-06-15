@@ -14,9 +14,13 @@ class UpdateDietUseCase {
         }
         
         const validation = DietValidation.validateUpdate(data)
-        
         if (!validation.isValid) {
             throw new Error(validation.errors.join(', '))
+        }
+        
+        const newFieldsValidation = DietValidation.validateNewFields(data)
+        if (!newFieldsValidation.isValid) {
+            throw new Error(newFieldsValidation.errors.join(', '))
         }
         
         const diet = await Diet.findById(id)
@@ -25,7 +29,11 @@ class UpdateDietUseCase {
             throw new Error('Dieta não encontrada')
         }
         
-        const allowed = ['meals', 'restrictions', 'observations', 'endDate', 'isActive', 'petId']
+        const allowed = [
+            'meals', 'restrictions', 'observations', 'endDate', 'isActive', 'petId',
+            'mealFrequency', 'waterIntake', 'nutritionalGoals', 'weeklyMenu',
+            'dietaryRestrictions', 'supplements'
+        ]
         
         for (const field of allowed) {
             if (data[field] !== undefined) {

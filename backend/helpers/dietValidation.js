@@ -85,3 +85,40 @@ class DietValidation {
 }
 
 module.exports = DietValidation
+function validateNewFields(data) {
+    const errors = []
+    
+    if (data.waterIntake) {
+        if (data.waterIntake.recommended < 0) {
+            errors.push('Quantidade de água não pode ser negativa')
+        }
+        if (data.waterIntake.recommended > 5000) {
+            errors.push('Quantidade de água muito alta (máximo 5000ml)')
+        }
+    }
+    
+    if (data.nutritionalGoals) {
+        const hasGoal = data.nutritionalGoals.weightGain || 
+                        data.nutritionalGoals.weightLoss || 
+                        data.nutritionalGoals.maintenance
+        if (!hasGoal) {
+            errors.push('Pelo menos um objetivo nutricional deve ser selecionado')
+        }
+    }
+    
+    if (data.weeklyMenu && data.weeklyMenu.length > 7) {
+        errors.push('Menu semanal não pode ter mais de 7 dias')
+    }
+    
+    if (data.dietaryRestrictions && data.dietaryRestrictions.length > 10) {
+        errors.push('Máximo de 10 restrições alimentares')
+    }
+    
+    if (data.supplements && data.supplements.length > 15) {
+        errors.push('Máximo de 15 suplementos')
+    }
+    
+    return { isValid: errors.length === 0, errors }
+}
+
+module.exports.validateNewFields = validateNewFields
