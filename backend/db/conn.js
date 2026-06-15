@@ -1,8 +1,10 @@
 const mongoose = require('mongoose')
-mongoose.set("strictQuery", false);
+mongoose.set("strictQuery", false)
+const dockerConfig = require('../config/docker')
 
 async function main() {
-  await mongoose.connect('mongodb://localhost:27017/getapetref')
+  const uri = dockerConfig.getMongoURI()
+  await mongoose.connect(uri)
   console.log('Conectou com Mongoose!')
 }
 
