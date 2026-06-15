@@ -1,9 +1,14 @@
+const mongoose = require('mongoose')
 const Diet = require('../../models/Diet')
 const DietValidation = require('../../helpers/dietValidation')
 const logger = require('../../config/logger')
 
 class CreateDietUseCase {
     async execute(data) {
+        if (!mongoose.Types.ObjectId.isValid(data.petId)) {
+            throw new Error('petId inválido')
+        }
+        
         const validation = DietValidation.validateCreate(data)
         
         if (!validation.isValid) {

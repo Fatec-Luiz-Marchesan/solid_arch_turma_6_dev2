@@ -1,3 +1,4 @@
+const mongoose = require('mongoose')
 const Diet = require('../../models/Diet')
 const DietValidation = require('../../helpers/dietValidation')
 
@@ -22,7 +23,7 @@ class GetDietUseCase {
     }
     
     async findByPetId(petId) {
-        if (!DietValidation.validateId(petId)) {
+        if (!mongoose.Types.ObjectId.isValid(petId)) {
             throw new Error('petId inválido')
         }
         
@@ -45,6 +46,9 @@ class GetDietUseCase {
         }
         
         if (filters.petId) {
+            if (!mongoose.Types.ObjectId.isValid(filters.petId)) {
+                throw new Error('petId inválido')
+            }
             query.petId = filters.petId
         }
         
