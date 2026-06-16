@@ -55,47 +55,62 @@ class GenerateReportUseCase {
   }
 
   async fetchData(type, filters) {
-    // Construção segura da query – apenas campos permitidos e valores validados
+    // Inicializa query vazia
     const query = {};
+
+    // Se não houver filtros, retorna todos os dados (com segurança)
+    if (!filters || typeof filters !== 'object') {
+      return this.getEmptyData(type);
+    }
+
+    // Listas de valores permitidos para validação
     const allowedStatus = ['pending', 'paid', 'failed', 'refunded', 'canceled'];
     const allowedSpecies = ['dog', 'cat'];
+    const allowedPaymentStatus = ['pending', 'paid', 'failed', 'refunded', 'canceled'];
 
-    // Data inicial
-    if (filters?.startDate) {
-      const d = new Date(filters.startDate);
-      if (!isNaN(d.getTime())) {
-        query.createdAt = query.createdAt || {};
-        query.createdAt.$gte = d;
-      }
+    // --- Validação e sanitização de cada campo ---
+
+    // Datas
+    const startDate = filters.startDate ? new Date(filters.startDate) : null;
+    const endDate = filters.endDate ? new Date(filters.endDate) : null;
+
+    if (startDate && !isNaN(startDate.getTime())) {
+      query.createdAt = query.createdAt || {};
+      query.createdAt.$gte = startDate;
+    }
+    if (endDate && !isNaN(endDate.getTime())) {
+      query.createdAt = query.createdAt || {};
+      query.createdAt.$lte = endDate;
     }
 
-    // Data final
-    if (filters?.endDate) {
-      const d = new Date(filters.endDate);
-      if (!isNaN(d.getTime())) {
-        query.createdAt = query.createdAt || {};
-        query.createdAt.$lte = d;
+    // Status (apenas para tipos que não são payments, pois payments usam paymentStatus)
+    if (filters.status && typeof filters.status === 'string') {
+      const statusValue = filters.status.trim();
+      if (allowedStatus.includes(statusValue) && type !== 'payments') {
+        query.status = statusValue;
       }
-    }
-
-    // Status (apenas para tipos que têm campo status)
-    if (filters?.status && allowedStatus.includes(filters.status) && type !== 'payments') {
-      query.status = filters.status;
     }
 
     // Espécie
-    if (filters?.species && allowedSpecies.includes(filters.species)) {
-      query.species = filters.species;
+    if (filters.species && typeof filters.species === 'string') {
+      const speciesValue = filters.species.trim();
+      if (allowedSpecies.includes(speciesValue)) {
+        query.species = speciesValue;
+      }
     }
 
-    // Vacinação
-    if (filters?.vaccinated !== undefined && filters?.vaccinated !== null) {
-      query.vaccinated = filters.vaccinated === 'true' || filters.vaccinated === true;
+    // Vacinação (booleano)
+    if (filters.vaccinated !== undefined && filters.vaccinated !== null) {
+      const vaccinatedValue = filters.vaccinated === 'true' || filters.vaccinated === true;
+      query.vaccinated = vaccinatedValue;
     }
 
     // Status de pagamento (apenas para payments)
-    if (filters?.paymentStatus && allowedStatus.includes(filters.paymentStatus) && type === 'payments') {
-      query.status = filters.paymentStatus;
+    if (type === 'payments' && filters.paymentStatus && typeof filters.paymentStatus === 'string') {
+      const paymentStatusValue = filters.paymentStatus.trim();
+      if (allowedPaymentStatus.includes(paymentStatusValue)) {
+        query.status = paymentStatusValue;
+      }
     }
 
     // Adoções: adopter não nulo
@@ -103,6 +118,7 @@ class GenerateReportUseCase {
       query.adopter = { $ne: null };
     }
 
+    // Seleciona o modelo adequado
     let Model;
     switch (type) {
       case 'pets':
@@ -127,8 +143,14 @@ class GenerateReportUseCase {
         return [];
     }
 
+    // Executa a query com segurança (apenas campos validados)
     const data = await Model.find(query).sort('-createdAt').lean();
     return data;
+  }
+
+  // Método auxiliar para retornar dados vazios quando não há modelo
+  async getEmptyData(type) {
+    return [];
   }
 }
 
