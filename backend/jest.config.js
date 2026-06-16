@@ -1,14 +1,11 @@
 module.exports = {
   testEnvironment: 'node',
   testMatch: ['**/tests/**/*.test.js'],
-  transform: {
-    '^.+\\.js$': 'babel-jest',
-  },
   transformIgnorePatterns: ['node_modules/(?!(uuid)/)'],
   setupFiles: ['./tests/globalMocks/petControllerMock.js'],
   setupFilesAfterEnv: ['./tests/setup.js'],
   testTimeout: 60000,
   forceExit: true,
   verbose: true,
-  maxWorkers: 1,
+  maxWorkers: 1
 };
