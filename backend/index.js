@@ -4,6 +4,20 @@ const cors = require('cors')
 const logger = require('./config/logger')
 const initializeSentry = require('./config/sentry')
 const sentryErrorMiddleware = require('./middlewares/sentryErrorMiddleware')
+
+
+const app = express()
+
+initializeSentry()
+
+app.use(express.json())
+app.use(cors({
+  credentials: true,
+  origin: 'http://localhost:3000'
+}))
+app.use(express.static('public'))
+
+
 const PetRoutes = require('./routers/PetRouters')
 const UserRoutes = require('./routers/UserRouters')
 const LocationRoutes = require('./routers/LocationRoutes')
@@ -16,20 +30,10 @@ const MessageRoutes = require('./routers/MessageRoutes')
 const DockerRoutes = require('./routers/DockerRoutes')
 const UploadRoutes = require('./routers/UploadRoutes')
 const PaymentRoutes = require('./routers/PaymentRoutes')
-const SettingsRoutes = require('./routers/SettingsRoutes')   
+const SettingsRoutes = require('./routers/SettingsRoutes')
 const ReportRoutes = require("./routers/ReportRoutes");
+const eventRoutes = require('./routers/EventRoutes');
 
-const app = express()
-
-initializeSentry()
-
-app.use(express.json())
-app.use(cors({
-    credentials: true,
-    origin: 'http://localhost:3000'
-}))
-
-app.use(express.static('public'))
 
 app.use('/pets', PetRoutes)
 app.use('/users', UserRoutes)
@@ -43,22 +47,25 @@ app.use('/messages', MessageRoutes)
 app.use('/api/docker', DockerRoutes)
 app.use('/uploads', UploadRoutes)
 app.use('/api/payments', PaymentRoutes)
-app.use('/api/settings', SettingsRoutes)   
+app.use('/api/settings', SettingsRoutes)
 app.use('/api/reports', ReportRoutes)
+app.use('/api/events', eventRoutes)   
 
 
 app.get('/health', (req, res) => {
-    res.json({ status: 'ok', docker: process.env.DOCKER_ENV === 'true' })
+  res.json({ status: 'ok', docker: process.env.DOCKER_ENV === 'true' })
 })
+
 
 app.use(sentryErrorMiddleware)
 
+
 if (process.env.NODE_ENV !== 'test') {
-    const PORT = process.env.PORT || 5000
-    app.listen(PORT, () => {
-        logger.info(`Servidor rodando na porta ${PORT}`)
-        console.log(`Servidor rodando na porta ${PORT}`)
-    })
+  const PORT = process.env.PORT || 5000
+  app.listen(PORT, () => {
+    logger.info(`Servidor rodando na porta ${PORT}`)
+    console.log(`Servidor rodando na porta ${PORT}`)
+  })
 }
 
 module.exports = app
