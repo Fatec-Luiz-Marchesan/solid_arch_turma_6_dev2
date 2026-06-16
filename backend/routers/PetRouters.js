@@ -4,7 +4,6 @@ const verifyToken = require('../helpers/check-token')
 const { imageUpload } = require('../helpers/image-upload')
 const { strictLimiter, standardLimiter, authLimiter } = require('../middlewares/rateLimiter')
 
-// Rotas específicas primeiro (evita conflito com /:id)
 router.get('/vaccinated', standardLimiter, PetController.getVaccinatedPets)
 router.get('/health/:status', standardLimiter, PetController.getPetsByHealthStatus)
 
