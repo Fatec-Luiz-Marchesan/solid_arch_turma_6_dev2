@@ -4,8 +4,8 @@ const verifyToken = require('../helpers/check-token')
 const { imageUpload } = require('../helpers/image-upload')
 const { strictLimiter, standardLimiter, authLimiter } = require('../middlewares/rateLimiter')
 
-router.get('/vaccinated', standardLimiter, PetController.getVaccinatedPets)
-router.get('/health/:status', standardLimiter, PetController.getPetsByHealthStatus)
+router.get('/vaccinated', apiLimiter, PetController.getVaccinatedPets)
+router.get('/health/:status', apiLimiter, PetController.getPetsByHealthStatus)
 
 router.post('/create', authLimiter, verifyToken, imageUpload.array('images'), PetController.create)
 router.get('/', standardLimiter, PetController.getAll)
