@@ -17,12 +17,13 @@ const apiLimiter = rateLimit({
 });
 
 const strictLimiter = rateLimit({
-const standardLimiter = apiLimiter;
   windowMs: 60 * 60 * 1000,
   max: 10,
   message: { message: 'Limite de requisições excedido. Tente novamente em 1 hora.' },
   standardHeaders: true,
   legacyHeaders: false,
 });
+
+const standardLimiter = apiLimiter;
 
 module.exports = { authLimiter, apiLimiter, strictLimiter, standardLimiter };
