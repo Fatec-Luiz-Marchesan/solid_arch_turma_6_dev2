@@ -4,8 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "jest --coverage",
-    "start": "nodemon ./index.js localhost 5000"
+    "test": "jest",
+    "test:integration": "jest --testPathPatterns=integration",
+    "test:coverage": "jest --coverage"
   },
   "author": "Matheus <matheus@horadecodar.com.br> (http://www.horadecodar.com.br/)",
   "license": "MIT",
