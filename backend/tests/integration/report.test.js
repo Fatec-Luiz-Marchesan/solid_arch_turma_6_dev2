@@ -1,17 +1,22 @@
-const request = require('supertest');
-const express = require('express');
-const ReportController = require('../../controllers/ReportController');
-const Report = require('../../models/Report');
-
+// Mocks dos middlewares ANTES de importar as rotas
 jest.mock('../../middlewares/authMiddleware', () => (req, res, next) => {
   req.userId = '507f1f77bcf86cd799439011';
   next();
 });
-jest.mock('../../middlewares/rateLimiter', () => ({ apiLimiter: (req, res, next) => next() }));
+jest.mock('../../middlewares/rateLimiter', () => ({
+  apiLimiter: (req, res, next) => next(),
+  authLimiter: (req, res, next) => next(),
+  strictLimiter: (req, res, next) => next(),
+}));
+
+const request = require('supertest');
+const express = require('express');
+const Report = require('../../models/Report');
+const ReportRoutes = require('../../routers/ReportRoutes');
 
 const app = express();
 app.use(express.json());
-app.use('/api/reports', require('../../routers/ReportRoutes'));
+app.use('/api/reports', ReportRoutes);
 
 describe('Report Integration Tests', () => {
   const testUserId = '507f1f77bcf86cd799439011';
@@ -25,7 +30,8 @@ describe('Report Integration Tests', () => {
       .post('/api/reports')
       .send({
         name: 'Relatório de Pets',
-        type: 'pets'
+        type: 'pets',
+        format: 'json'
       });
     expect(res.status).toBe(201);
     expect(res.body.success).toBe(true);
