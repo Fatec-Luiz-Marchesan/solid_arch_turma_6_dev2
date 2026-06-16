@@ -7,6 +7,9 @@ module.exports = {
         'helpers/**/*.js',
         '!**/node_modules/**',
         '!**/tests/**',
+        'controllers/PaymentController.js',
+        'useCases/payment/*.js',
+        'models/Payment.js'
     ],
     testMatch: ['**/tests/**/*.test.js'],
     setupFilesAfterEnv: ['./tests/setup.js'],
