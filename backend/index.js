@@ -17,6 +17,7 @@ const DockerRoutes = require('./routers/DockerRoutes')
 const UploadRoutes = require('./routers/UploadRoutes')
 const PaymentRoutes = require('./routers/PaymentRoutes')
 const SettingsRoutes = require('./routers/SettingsRoutes')   
+const ReportRoutes = require("./routers/ReportRoutes");
 
 const app = express()
 
@@ -43,6 +44,8 @@ app.use('/api/docker', DockerRoutes)
 app.use('/uploads', UploadRoutes)
 app.use('/api/payments', PaymentRoutes)
 app.use('/api/settings', SettingsRoutes)   
+app.use('/api/reports', ReportRoutes)
+
 
 app.get('/health', (req, res) => {
     res.json({ status: 'ok', docker: process.env.DOCKER_ENV === 'true' })
