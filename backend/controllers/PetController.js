@@ -157,11 +157,9 @@ class PetController {
         return res.status(403).json({ message: 'Você não tem permissão para editar este pet!' });
       }
 
-      // Criar objeto de update seguro - apenas campos permitidos
       const allowedFields = ['name', 'age', 'weight', 'color', 'description', 'vaccinated', 'healthStatus', 'lastVetVisit', 'available', 'images'];
       const updateData = {};
 
-      // Validar e sanitizar name
       if (name !== undefined) {
         if (typeof name !== 'string' || name.trim().length === 0) {
           return res.status(422).json({ message: 'Nome inválido!' });
@@ -172,7 +170,6 @@ class PetController {
         updateData.name = name.trim();
       }
 
-      // Validar e sanitizar age
       if (age !== undefined) {
         const ageNum = parseInt(age);
         if (isNaN(ageNum) || ageNum < 0 || ageNum > 50) {
@@ -181,7 +178,6 @@ class PetController {
         updateData.age = ageNum;
       }
 
-      // Validar e sanitizar weight
       if (weight !== undefined) {
         const weightNum = parseFloat(weight);
         if (isNaN(weightNum) || weightNum < 0 || weightNum > 200) {
@@ -190,7 +186,6 @@ class PetController {
         updateData.weight = weightNum;
       }
 
-      // Validar e sanitizar color
       if (color !== undefined) {
         if (typeof color !== 'string' || color.trim().length === 0) {
           return res.status(422).json({ message: 'Cor inválida!' });
@@ -201,7 +196,6 @@ class PetController {
         updateData.color = color.trim();
       }
 
-      // Validar description
       if (description !== undefined) {
         if (typeof description !== 'string') {
           return res.status(422).json({ message: 'Descrição inválida!' });
@@ -209,13 +203,11 @@ class PetController {
         updateData.description = description.trim().substring(0, 500);
       }
 
-      // Validar vaccinated
       if (vaccinated !== undefined) {
         const isVaccinated = vaccinated === 'true' || vaccinated === true || vaccinated === 1 || vaccinated === '1';
         updateData.vaccinated = isVaccinated;
       }
 
-      // Validar healthStatus
       if (healthStatus !== undefined) {
         const validStatus = ['healthy', 'sick', 'treatment', 'recovering'];
         if (!validStatus.includes(healthStatus)) {
@@ -224,7 +216,6 @@ class PetController {
         updateData.healthStatus = healthStatus;
       }
 
-      // Validar lastVetVisit
       if (lastVetVisit !== undefined) {
         if (lastVetVisit !== null && lastVetVisit !== '') {
           const date = new Date(lastVetVisit);
@@ -237,13 +228,11 @@ class PetController {
         }
       }
 
-      // Validar available
       if (available !== undefined) {
         const isAvailable = available === 'true' || available === true || available === 1 || available === '1';
         updateData.available = isAvailable;
       }
 
-      // Validar images
       if (images && images.length > 0) {
         if (!Array.isArray(images)) {
           return res.status(422).json({ message: 'Formato de imagens inválido!' });
@@ -251,7 +240,6 @@ class PetController {
         updateData.images = [];
         for (const image of images) {
           if (image && image.filename && typeof image.filename === 'string') {
-            // Validar nome do arquivo
             if (image.filename.match(/^[a-zA-Z0-9-_\.]{1,255}$/)) {
               updateData.images.push(image.filename);
             }
@@ -259,7 +247,6 @@ class PetController {
         }
       }
 
-      // Usar $set para evitar injeção de operadores MongoDB
       await Pet.findByIdAndUpdate(id, { $set: updateData });
       const updatedPet = await Pet.findById(id);
 
