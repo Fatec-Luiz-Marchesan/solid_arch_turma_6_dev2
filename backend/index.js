@@ -5,6 +5,7 @@ const logger = require('./config/logger')
 const initializeSentry = require('./config/sentry')
 const sentryErrorMiddleware = require('./middlewares/sentryErrorMiddleware')
 const PetRoutes = require('./routers/PetRouters')
+const EventRoutes = require('./routers/EventRoutes')
 const UserRoutes = require('./routers/UserRouters')
 const LocationRoutes = require('./routers/LocationRoutes')
 const AdminRoutes = require('./routers/AdminRoutes')
@@ -17,6 +18,8 @@ const DockerRoutes = require('./routers/DockerRoutes')
 const UploadRoutes = require('./routers/UploadRoutes')
 const PaymentRoutes = require('./routers/PaymentRoutes')
 const SettingsRoutes = require('./routers/SettingsRoutes')   
+const rateLimiter = require('./config/rateLimiter');
+app.use(rateLimiter);
 
 const app = express()
 
