@@ -55,22 +55,53 @@ class GenerateReportUseCase {
   }
 
   async fetchData(type, filters) {
+    // Construção segura da query – apenas campos permitidos e valores validados
     const query = {};
-    const startDate = filters?.startDate ? new Date(filters.startDate) : null;
-    const endDate = filters?.endDate ? new Date(filters.endDate) : null;
+    const allowedStatus = ['pending', 'paid', 'failed', 'refunded', 'canceled'];
+    const allowedSpecies = ['dog', 'cat'];
 
-    if (startDate && endDate) {
-      query.createdAt = { $gte: startDate, $lte: endDate };
-    } else if (startDate) {
-      query.createdAt = { $gte: startDate };
-    } else if (endDate) {
-      query.createdAt = { $lte: endDate };
+    // Data inicial
+    if (filters?.startDate) {
+      const d = new Date(filters.startDate);
+      if (!isNaN(d.getTime())) {
+        query.createdAt = query.createdAt || {};
+        query.createdAt.$gte = d;
+      }
     }
 
-    if (filters?.status) query.status = filters.status;
-    if (filters?.species) query.species = filters.species;
-    if (filters?.vaccinated !== undefined) query.vaccinated = filters.vaccinated === 'true';
-    if (filters?.paymentStatus) query.status = filters.paymentStatus;
+    // Data final
+    if (filters?.endDate) {
+      const d = new Date(filters.endDate);
+      if (!isNaN(d.getTime())) {
+        query.createdAt = query.createdAt || {};
+        query.createdAt.$lte = d;
+      }
+    }
+
+    // Status (apenas para tipos que têm campo status)
+    if (filters?.status && allowedStatus.includes(filters.status) && type !== 'payments') {
+      query.status = filters.status;
+    }
+
+    // Espécie
+    if (filters?.species && allowedSpecies.includes(filters.species)) {
+      query.species = filters.species;
+    }
+
+    // Vacinação
+    if (filters?.vaccinated !== undefined && filters?.vaccinated !== null) {
+      query.vaccinated = filters.vaccinated === 'true' || filters.vaccinated === true;
+    }
+
+    // Status de pagamento (apenas para payments)
+    if (filters?.paymentStatus && allowedStatus.includes(filters.paymentStatus) && type === 'payments') {
+      query.status = filters.paymentStatus;
+    }
+
+    // Adoções: adopter não nulo
+    if (type === 'adoptions') {
+      query.adopter = { $ne: null };
+    }
 
     let Model;
     switch (type) {
@@ -91,7 +122,6 @@ class GenerateReportUseCase {
         break;
       case 'adoptions':
         Model = Pet;
-        query.adopter = { $ne: null };
         break;
       default:
         return [];
